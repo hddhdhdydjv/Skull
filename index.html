@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anatomy Unveiled</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0b0b0b;
+      --text-primary: #f0ece4;
+      --text-muted: #8a8178;
+      --accent: #c0522a;
+      --accent-dim: rgba(192, 82, 42, 0.5);
+      --line: rgba(240, 236, 228, 0.1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ─── NAV ─────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 48px;
+      pointer-events: none;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .nav-logo svg {
+      width: 22px;
+      height: 22px;
+      opacity: 0.8;
+    }
+
+    .nav-logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .nav-logo-text span:first-child {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .nav-logo-text span:last-child {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      font-weight: 300;
+      color: var(--text-muted);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 40px;
+      pointer-events: auto;
+    }
+
+    .nav-links a {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover { color: var(--text-primary); }
+
+    .nav-cta {
+      pointer-events: auto;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--text-primary);
+      border: 1px solid rgba(240,236,228,0.3);
+      padding: 10px 22px;
+      text-decoration: none;
+      transition: border-color 0.3s, background 0.3s;
+    }
+
+    .nav-cta:hover {
+      border-color: var(--text-primary);
+      background: rgba(240,236,228,0.05);
+    }
+
+    /* ─── HERO ────────────────────────────────────────── */
+    #hero {
+      position: relative;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .hero-left {
+      padding-left: 64px;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .hero-title {
+      font-size: clamp(44px, 5.5vw, 80px);
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+    }
+
+    .hero-subtitle {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: -8px;
+    }
+
+    .hero-desc {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-muted);
+      max-width: 300px;
+      margin-top: 8px;
+    }
+
+    .scroll-hint {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 32px;
+    }
+
+    .scroll-hint-line {
+      width: 40px;
+      height: 1px;
+      background: var(--text-muted);
+    }
+
+    /* ─── IFRAME WRAPPER (hero center) ───────────────── */
+    .hero-model {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      position: relative;
+    }
+
+    .hero-model::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(192,82,42,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .sketchfab-embed-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sketchfab-embed-wrapper iframe {
+      width: 600px;
+      height: 600px;
+      border: none;
+      background: transparent;
+    }
+
+    /* ─── HERO RIGHT ──────────────────────────────────── */
+    .hero-right {
+      padding-right: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      z-index: 2;
+    }
+
+    .bone-list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0.35;
+      transition: opacity 0.4s;
+    }
+
+    .bone-list-item.active { opacity: 1; }
+
+    .bone-num {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      width: 22px;
+      text-align: right;
+    }
+
+    .bone-name-sm {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .bone-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    /* ─── SCROLL TRACK ────────────────────────────────── */
+    #scroll-track {
+      position: relative;
+    }
+
+    /* ─── STICKY SCENE ────────────────────────────────── */
+    .sticky-scene {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .sticky-scene iframe {
+      pointer-events: auto;
+    }
+
+    /* ─── SECTION TRIGGERS ────────────────────────────── */
+    .section-trigger {
+      height: 100vh;
+      position: relative;
+    }
+
+    /* ─── OVERLAY TEXT (left side) ───────────────────── */
+    .overlay-left {
+      padding-left: 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section-number {
+      font-size: 72px;
+      font-weight: 700;
+      line-height: 1;
+      color: rgba(240,236,228,0.04);
+      letter-spacing: -0.04em;
+      user-select: none;
+      transform: translateY(20px);
+      transition: transform 0.8s ease, opacity 0.8s ease;
+    }
+
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 3.5vw, 52px);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+    }
+
+    .section-desc {
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--text-muted);
+      max-width: 280px;
+    }
+
+    /* ─── OVERLAY TEXT (right side) ──────────────────── */
+    .overlay-right {
+      padding-right: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 14px;
+    }
+
+    .ui-line {
+      width: 1px;
+      background: var(--line);
+      align-self: flex-end;
+    }
+
+    .ui-cross {
+      position: relative;
+      width: 16px;
+      height: 16px;
+      opacity: 0.25;
+    }
+
+    .ui-cross::before,
+    .ui-cross::after {
+      content: '';
+      position: absolute;
+      background: var(--text-primary);
+    }
+
+    .ui-cross::before {
+      width: 16px; height: 1px;
+      top: 50%; left: 0; transform: translateY(-50%);
+    }
+
+    .ui-cross::after {
+      width: 1px; height: 16px;
+      left: 50%; top: 0; transform: translateX(-50%);
+    }
+
+    .ui-marker {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      opacity: 0.5;
+      text-transform: uppercase;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    .progress-track {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .progress-pip {
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      opacity: 0.3;
+      transition: opacity 0.4s, background 0.4s;
+    }
+
+    .progress-pip.active {
+      opacity: 1;
+      background: var(--accent);
+    }
+
+    /* ─── IFRAME SCALE ────────────────────────────────── */
+    .sticky-model {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      position: relative;
+      transition: transform 0.6s ease;
+    }
+
+    .sticky-model::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 55% 55% at 50% 50%, rgba(192,82,42,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .sticky-model .sketchfab-embed-wrapper {
+      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ─── TEXT FADE ───────────────────────────────────── */
+    .text-block {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .text-block.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── SECTION INDEX TRACKER ───────────────────────── */
+    #side-index {
+      position: fixed;
+      left: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .index-tick {
+      width: 1px;
+      height: 20px;
+      background: var(--line);
+      transition: background 0.4s, height 0.4s;
+      position: relative;
+    }
+
+    .index-tick.active {
+      background: var(--accent);
+      height: 32px;
+    }
+
+    .index-tick-label {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .index-tick.active .index-tick-label {
+      opacity: 0.6;
+    }
+
+    /* ─── FOOTER ──────────────────────────────────────── */
+    footer {
+      padding: 80px 64px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    /* ─── FEATURES BAR ────────────────────────────────── */
+    .features-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--line);
+      padding: 40px 64px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 0 32px;
+      border-right: 1px solid var(--line);
+    }
+
+    .feature-item:first-child { padding-left: 0; }
+    .feature-item:last-child { border-right: none; }
+
+    .feature-icon {
+      width: 28px;
+      height: 28px;
+      opacity: 0.5;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .feature-text h4 {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .feature-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ─── GRAIN OVERLAY ───────────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    /* ─── RESPONSIVE ──────────────────────────────────── */
+    @media (max-width: 900px) {
+      nav { padding: 20px 24px; }
+      .nav-links { display: none; }
+      #hero, .sticky-scene { grid-template-columns: 1fr; }
+      .hero-right, .overlay-right { display: none; }
+      .hero-model, .sticky-model { height: 50vh; }
+      .sketchfab-embed-wrapper iframe { width: 340px; height: 340px; }
+      .hero-left, .overlay-left { padding: 0 24px; }
+      #side-index { display: none; }
+      .features-bar { grid-template-columns: 1fr 1fr; gap: 24px; padding: 32px 24px; }
+      footer { padding: 40px 24px; flex-direction: column; gap: 16px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <circle cx="12" cy="10" r="6"/>
+      <path d="M9 16v5M15 16v5M9 21h6"/>
+      <path d="M10 10c0-1 .5-2 2-2s2 1 2 2"/>
+    </svg>
+    <div class="nav-logo-text">
+      <span>ANATOMY</span>
+      <span>UNVEILED</span>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a href="#scroll-track">EXPERIENCE</a>
+    <a href="#scroll-track">ANATOMY</a>
+    <a href="#features">TECHNOLOGY</a>
+    <a href="#footer">ABOUT</a>
+  </div>
+  <a href="#scroll-track" class="nav-cta">EXPLORE MODEL &nbsp;→</a>
+</nav>
+
+<!-- SIDE INDEX -->
+<div id="side-index">
+  <div class="index-tick active" data-index="0"><span class="index-tick-label">01</span></div>
+  <div class="index-tick" data-index="1"><span class="index-tick-label">02</span></div>
+  <div class="index-tick" data-index="2"><span class="index-tick-label">03</span></div>
+  <div class="index-tick" data-index="3"><span class="index-tick-label">04</span></div>
+  <div class="index-tick" data-index="4"><span class="index-tick-label">05</span></div>
+  <div class="index-tick" data-index="5"><span class="index-tick-label">06</span></div>
+  <div class="index-tick" data-index="6"><span class="index-tick-label">07</span></div>
+  <div class="index-tick" data-index="7"><span class="index-tick-label">08</span></div>
+</div>
+
+<!-- ─── HERO ─────────────────────────────────────────── -->
+<section id="hero">
+  <div class="hero-left">
+    <span class="label">Interactive Experience</span>
+    <h1 class="hero-title">Anatomy<br>Unveiled</h1>
+    <p class="hero-subtitle">Explore. Dissect. Understand.</p>
+    <p class="hero-desc">Explore the structure of the human skull through a guided visual experience.</p>
+    <div class="scroll-hint">
+      <span class="scroll-hint-line"></span>
+      Scroll to explore ↓
+    </div>
+  </div>
+
+  <div class="hero-model">
+    <div class="sketchfab-embed-wrapper">
+      <iframe
+        title="Human Skull Explode Anatomy Atlas"
+        frameborder="0"
+        allowfullscreen
+        mozallowfullscreen="true"
+        webkitallowfullscreen="true"
+        allow="autoplay; fullscreen; xr-spatial-tracking"
+        src="https://sketchfab.com/models/2e3bfc20d4b642b18d91febbc6787022/embed?preload=1&transparent=1">
+      </iframe>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="bone-list-item active"><span class="bone-num">01</span><span class="bone-name-sm">Frontal</span><span class="bone-dot"></span></div>
+    <div class="bone-list-item"><span class="bone-num">02</span><span class="bone-name-sm">Parietal</span><span class="bone-dot"></span></div>
+    <div class="bone-list-item"><span class="bone-num">03</span><span class="bone-name-sm">Temporal</span><span class="bone-dot"></span></div>
+    <div class="bone-list-item"><span class="bone-num">04</span><span class="bone-name-sm">Sphenoid</span><span class="bone-dot"></span></div>
+    <div class="bone-list-item"><span class="bone-num">05</span><span class="bone-name-sm">Orbital</span><span class="bone-dot"></span></div>
+    <div class="bone-list-item"><span class="bone-num">06</span><span class="bone-name-sm">Nasal</span><span class="bone-dot"></span></div>
+    <div class="bone-list-item"><span class="bone-num">07</span><span class="bone-name-sm">Maxilla</span><span class="bone-dot"></span></div>
+    <div class="bone-list-item"><span class="bone-num">08</span><span class="bone-name-sm">Mandible</span><span class="bone-dot"></span></div>
+  </div>
+</section>
+
+<!-- ─── SCROLL TRACK ──────────────────────────────────── -->
+<div id="scroll-track">
+
+  <!-- STICKY SCENE -->
+  <div class="sticky-scene" id="sticky-scene">
+
+    <!-- Left overlay — updated by JS -->
+    <div class="overlay-left" id="overlay-left">
+      <div class="text-block" id="tb-number">
+        <span class="section-number">01</span>
+      </div>
+      <div class="text-block" id="tb-label">
+        <span class="section-label">Skull Anatomy</span>
+      </div>
+      <div class="text-block" id="tb-title">
+        <h2 class="section-title">Full<br>Skull</h2>
+      </div>
+      <div class="text-block" id="tb-desc">
+        <p class="section-desc">Complete structure of the human skull.</p>
+      </div>
+    </div>
+
+    <!-- Center: 3D model -->
+    <div class="sticky-model" id="sticky-model">
+      <div class="sketchfab-embed-wrapper">
+        <iframe
+          title="Human Skull Explode Anatomy Atlas"
+          frameborder="0"
+          allowfullscreen
+          mozallowfullscreen="true"
+          webkitallowfullscreen="true"
+          allow="autoplay; fullscreen; xr-spatial-tracking"
+          src="https://sketchfab.com/models/2e3bfc20d4b642b18d91febbc6787022/embed?preload=1&transparent=1">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- Right: decorative -->
+    <div class="overlay-right" id="overlay-right">
+      <div class="ui-cross"></div>
+      <div class="ui-line" style="height: 80px;"></div>
+      <div class="progress-track" id="progress-track">
+        <div class="progress-pip active"></div>
+        <div class="progress-pip"></div>
+        <div class="progress-pip"></div>
+        <div class="progress-pip"></div>
+        <div class="progress-pip"></div>
+        <div class="progress-pip"></div>
+        <div class="progress-pip"></div>
+        <div class="progress-pip"></div>
+      </div>
+      <div class="ui-line" style="height: 80px;"></div>
+      <div class="ui-marker">Anatomy</div>
+    </div>
+  </div>
+
+  <!-- 8 trigger sections (invisible, just drive scroll height) -->
+  <div class="section-trigger" data-index="0"></div>
+  <div class="section-trigger" data-index="1"></div>
+  <div class="section-trigger" data-index="2"></div>
+  <div class="section-trigger" data-index="3"></div>
+  <div class="section-trigger" data-index="4"></div>
+  <div class="section-trigger" data-index="5"></div>
+  <div class="section-trigger" data-index="6"></div>
+  <div class="section-trigger" data-index="7"></div>
+
+</div>
+
+<!-- ─── FEATURES BAR ──────────────────────────────────── -->
+<div class="features-bar" id="features">
+  <div class="feature-item">
+    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+    </svg>
+    <div class="feature-text">
+      <h4>Detailed 3D Model</h4>
+      <p>Scanned and modelled with millimetric precision.</p>
+    </div>
+  </div>
+  <div class="feature-item">
+    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+      <polyline points="2 17 12 22 22 17"/>
+      <polyline points="2 12 12 17 22 12"/>
+    </svg>
+    <div class="feature-text">
+      <h4>8 Main Bones</h4>
+      <p>Explore each bone individually with detailed information.</p>
+    </div>
+  </div>
+  <div class="feature-item">
+    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="m21 21-4.35-4.35"/>
+    </svg>
+    <div class="feature-text">
+      <h4>Immersive Interaction</h4>
+      <p>Rotate, zoom, and discover angles invisible to the naked eye.</p>
+    </div>
+  </div>
+  <div class="feature-item">
+    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+    <div class="feature-text">
+      <h4>Advanced Technology</h4>
+      <p>WebGL, fluid animations and 100% interactive experience.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ─── FOOTER ─────────────────────────────────────────── -->
+<footer id="footer">
+  <span class="footer-label">Anatomy Unveiled &mdash; 2024</span>
+  <span class="footer-label">Explore the human skull</span>
+  <span class="footer-label">Interactive Experience</span>
+</footer>
+
+<script>
+  const sections = [
+    { num: '01', label: 'Skull Anatomy',    title: 'Full\nSkull',          desc: 'Complete structure of the human skull.' },
+    { num: '02', label: 'Neurocranium',     title: 'Frontal\nBone',        desc: 'Forms the forehead and upper part of the eye sockets.' },
+    { num: '03', label: 'Neurocranium',     title: 'Parietal\nBones',      desc: 'Form the sides and roof of the skull.' },
+    { num: '04', label: 'Neurocranium',     title: 'Temporal\nBones',      desc: 'House structures of the ear and support the jaw.' },
+    { num: '05', label: 'Viscerocranium',   title: 'Orbital\nStructure',   desc: 'Protects and supports the eyes.' },
+    { num: '06', label: 'Viscerocranium',   title: 'Nasal\nBone',          desc: 'Forms the bridge of the nose.' },
+    { num: '07', label: 'Viscerocranium',   title: 'Maxilla',              desc: 'Upper jaw, supports teeth and facial structure.' },
+    { num: '08', label: 'Viscerocranium',   title: 'Mandible',             desc: 'Lower jaw, the only movable bone of the skull.' },
+  ];
+
+  const elNum    = document.getElementById('tb-number');
+  const elLabel  = document.getElementById('tb-label');
+  const elTitle  = document.getElementById('tb-title');
+  const elDesc   = document.getElementById('tb-desc');
+  const pips     = document.querySelectorAll('.progress-pip');
+  const ticks    = document.querySelectorAll('.index-tick');
+  const triggers = document.querySelectorAll('.section-trigger');
+  const stickyModel = document.getElementById('sticky-model').querySelector('.sketchfab-embed-wrapper');
+
+  let currentIndex = -1;
+  let rafId = null;
+
+  function formatTitle(raw) {
+    return raw.split('\n').join('<br>');
+  }
+
+  function updateSection(idx) {
+    if (idx === currentIndex) return;
+    currentIndex = idx;
+
+    const s = sections[idx];
+
+    // Fade out
+    [elNum, elLabel, elTitle, elDesc].forEach(el => {
+      el.classList.remove('visible');
+    });
+
+    setTimeout(() => {
+      elNum.querySelector('span').textContent  = s.num;
+      elLabel.querySelector('span').textContent = s.label;
+      elTitle.querySelector('h2').innerHTML    = formatTitle(s.title);
+      elDesc.querySelector('p').textContent    = s.desc;
+
+      // Fade in staggered
+      [elNum, elLabel, elTitle, elDesc].forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 60);
+      });
+    }, 200);
+
+    // Progress pips
+    pips.forEach((p, i) => p.classList.toggle('active', i === idx));
+
+    // Side index ticks
+    ticks.forEach((t, i) => t.classList.toggle('active', i === idx));
+
+    // Subtle scale on model (1 → 1.02 → back)
+    stickyModel.style.transform = 'scale(1.02)';
+    setTimeout(() => { stickyModel.style.transform = 'scale(1)'; }, 500);
+  }
+
+  // Intersection Observer for triggers
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = parseInt(entry.target.dataset.index, 10);
+        updateSection(idx);
+      }
+    });
+  }, {
+    threshold: 0.5,
+    rootMargin: '0px 0px -40% 0px'
+  });
+
+  triggers.forEach(t => observer.observe(t));
+
+  // Initial visible state for first section
+  window.addEventListener('load', () => {
+    [elNum, elLabel, elTitle, elDesc].forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), 300 + i * 100);
+    });
+  });
+
+  // Hero bone list: highlight on scroll
+  const heroBoneItems = document.querySelectorAll('.bone-list-item');
+  window.addEventListener('scroll', () => {
+    const idx = Math.max(0, Math.min(currentIndex, 7));
+    heroBoneItems.forEach((item, i) => item.classList.toggle('active', i === idx));
+  }, { passive: true });
+</script>
+</body>
+</html>
