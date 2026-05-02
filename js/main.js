@@ -1,279 +1,391 @@
 /* ============================================================
-   SKULL ANATOMY — main.js
+   ANATOMY UNVEILED — main.js
+   Scroll-driven 3D skull with per-bone highlight + explode
    ============================================================ */
 
 (function () {
   'use strict';
 
+  /* ── Bone data ────────────────────────────────────────────── */
+  var BONES = [
+    {
+      id: 'intro',
+      keywords: [],
+      camPos:   { x:  0.6, y:  0.1, z: 5.5 },
+      lookAt:   { x:  0.6, y:  0,   z: 0   },
+      keyLight: { x:  2,   y:  4,   z: 3   },
+      explode:  { x:  0,   y:  0,   z: 0   },
+    },
+    {
+      id: 'frontal',
+      keywords: ['frontal','front','frente','fron'],
+      camPos:   { x:  0.4, y:  0.6, z: 4.2 },
+      lookAt:   { x:  0.4, y:  0.3, z: 0   },
+      keyLight: { x:  0.5, y:  2.5, z: 3   },
+      explode:  { x:  0,   y:  0.5, z: 1   },
+    },
+    {
+      id: 'parietal',
+      keywords: ['parietal','pari'],
+      camPos:   { x: -0.3, y:  1,   z: 4.4 },
+      lookAt:   { x:  0,   y:  0.5, z: 0   },
+      keyLight: { x: -1,   y:  3.5, z: 1.5 },
+      explode:  { x: -0.4, y:  0.8, z: 0.5 },
+    },
+    {
+      id: 'occipital',
+      keywords: ['occipital','occip'],
+      camPos:   { x: -1.2, y: -0.1, z: 4.6 },
+      lookAt:   { x: -0.3, y: -0.2, z: 0   },
+      keyLight: { x: -2.5, y:  1,   z:-2   },
+      explode:  { x: -0.6, y: -0.2, z:-1   },
+    },
+    {
+      id: 'temporal',
+      keywords: ['temporal','temp','mast'],
+      camPos:   { x:  1.2, y:  0,   z: 4   },
+      lookAt:   { x:  0.4, y: -0.1, z: 0   },
+      keyLight: { x:  2.5, y:  0.5, z: 2   },
+      explode:  { x:  1,   y:  0,   z: 0.5 },
+    },
+    {
+      id: 'orbital',
+      keywords: ['orbital','orbita','orbit','eye','ojo','nasal','ethmoid'],
+      camPos:   { x:  0.8, y:  0.4, z: 3.7 },
+      lookAt:   { x:  0.5, y:  0.2, z: 0   },
+      keyLight: { x:  1.5, y:  1,   z: 3   },
+      explode:  { x:  0.7, y:  0.3, z: 0.9 },
+    },
+    {
+      id: 'cigomatico',
+      keywords: ['cigom','zigom','zygomat','cheek','pomo'],
+      camPos:   { x:  1.1, y: -0.2, z: 4   },
+      lookAt:   { x:  0.5, y: -0.2, z: 0   },
+      keyLight: { x:  2,   y: -0.5, z: 2.5 },
+      explode:  { x:  1.1, y: -0.2, z: 0.7 },
+    },
+  ];
+
   /* ── DOM refs ─────────────────────────────────────────────── */
-  const loadingScreen = document.getElementById('loading-screen');
-  const progressBar   = document.getElementById('progress-bar');
-  const fireGlow      = document.getElementById('fire-glow');
-  const annotations   = document.getElementById('annotations');
-  const cursorDot     = document.getElementById('cursor-dot');
-  const cursorRing    = document.getElementById('cursor-ring');
+  var loadingEl  = document.getElementById('loading-screen');
+  var progressEl = document.getElementById('progress-bar');
+  var boneGlow   = document.getElementById('bone-glow');
+  var cursorDot  = document.getElementById('cursor-dot');
+  var cursorRing = document.getElementById('cursor-ring');
+  var sections   = document.querySelectorAll('.bone-section');
+  var tDots      = document.querySelectorAll('.t-dot');
 
-  /* ── State ────────────────────────────────────────────────── */
-  let mouseX = 0, mouseY = 0;          // raw px
-  let mouseNX = 0, mouseNY = 0;        // normalised -1..1
-  let ringX = 0, ringY = 0;            // cursor ring (lagged)
-  let parallaxX = 0, parallaxY = 0;    // lerped parallax
-  let clock, scene, camera, renderer, controls;
-  let skull = null;
-  let fireLights = [];
-  let fireTarget = 0;                  // 0 = off, 1 = on
-  let autoRotate = false;
-  let annotationsVisible = true;
-  let frameId;
+  /* ── Three.js state ──────────────────────────────────────── */
+  var scene, camera, renderer, controls, clock;
+  var skullRoot = null;
+  var allMeshes = [];           // { mesh, origPos, origMat, highlightMat }
+  var activeMeshes = [];        // currently highlighted mesh objects
+  var activeIndex = 0;
 
-  /* ── Three.js init ───────────────────────────────────────── */
-  function initThree() {
-    const container = document.getElementById('canvas-container');
+  /* Camera lerp targets */
+  var targetCamPos  = new THREE.Vector3(0.6, 0.1, 5.5);
+  var targetLookAt  = new THREE.Vector3(0.6, 0,   0);
+  var currentLookAt = new THREE.Vector3(0.6, 0,   0);
 
-    // Clock
+  /* Key highlight light */
+  var highlightLight;
+
+  /* Mouse for cursor */
+  var mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+  /* ── Init Three.js ───────────────────────────────────────── */
+  function init() {
+    var container = document.getElementById('canvas-container');
     clock = new THREE.Clock();
 
-    // Scene
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x080604);
-    scene.fog = new THREE.FogExp2(0x080604, 0.045);
+    scene.background = new THREE.Color(0x060607);
+    scene.fog = new THREE.FogExp2(0x060607, 0.04);
 
-    // Camera
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 0, 5);
+    camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0.6, 0.1, 5.5);
 
-    // Renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.outputEncoding   = THREE.sRGBEncoding;
-    renderer.toneMapping      = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.9;
+    renderer.outputEncoding    = THREE.sRGBEncoding;
+    renderer.toneMapping       = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.85;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // OrbitControls
+    /* Disable OrbitControls interaction — camera is scroll-driven */
     controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping  = true;
-    controls.dampingFactor  = 0.06;
-    controls.minDistance    = 2.2;
-    controls.maxDistance    = 9;
-    controls.autoRotateSpeed = 0.8;
-    controls.enablePan      = false;
-    controls.target.set(0, 0, 0);
+    controls.enabled     = false;
+    controls.enableZoom  = false;
+    controls.enablePan   = false;
+    controls.enableRotate = false;
+    controls.target.set(0.6, 0, 0);
 
     buildLights();
     loadModel();
+    setupScroll();
+    setupEvents();
     animate();
   }
 
   /* ── Lights ──────────────────────────────────────────────── */
   function buildLights() {
-    // Ambient — warm
-    const ambient = new THREE.AmbientLight(0x1a1008, 2.2);
-    scene.add(ambient);
+    scene.add(new THREE.AmbientLight(0x1a1008, 1.8));
 
-    // Key — warm top-right
-    const key = new THREE.DirectionalLight(0xfff4de, 2.8);
-    key.position.set(3, 5, 3);
-    key.castShadow = true;
-    key.shadow.mapSize.set(1024, 1024);
-    scene.add(key);
-
-    // Fill — left
-    const fill = new THREE.DirectionalLight(0xd4c4a0, 0.8);
+    var fill = new THREE.DirectionalLight(0xd4c4a0, 0.7);
     fill.position.set(-4, 1, 2);
     scene.add(fill);
 
-    // Rim — cool back
-    const rim = new THREE.DirectionalLight(0x8ab4d4, 1.2);
+    var rim = new THREE.DirectionalLight(0x8ab4d4, 0.9);
     rim.position.set(-1, -2, -5);
     scene.add(rim);
 
-    // Fire point lights (start off)
-    const fire1 = new THREE.PointLight(0xff6a00, 0, 3.5);
-    fire1.position.set(1.2, -0.5, 1.5);
-    scene.add(fire1);
-
-    const fire2 = new THREE.PointLight(0xff3000, 0, 3);
-    fire2.position.set(-1, 0.3, 1.2);
-    scene.add(fire2);
-
-    fireLights = [fire1, fire2];
+    /* Key/highlight — animated per bone */
+    highlightLight = new THREE.DirectionalLight(0xfff4de, 2.5);
+    highlightLight.position.set(2, 4, 3);
+    highlightLight.castShadow = true;
+    highlightLight.shadow.mapSize.set(1024, 1024);
+    scene.add(highlightLight);
   }
 
-  /* ── Model loading ───────────────────────────────────────── */
+  /* ── Load model ──────────────────────────────────────────── */
   function loadModel() {
-    const dracoLoader = new THREE.DRACOLoader();
-    dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/libs/draco/');
+    var draco = new THREE.DRACOLoader();
+    draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/libs/draco/');
 
-    const loader = new THREE.GLTFLoader();
-    loader.setDRACOLoader(dracoLoader);
+    var loader = new THREE.GLTFLoader();
+    loader.setDRACOLoader(draco);
 
     loader.load(
       'assets/Craneo.glb',
-
-      // onLoad
-      function (gltf) {
-        skull = gltf.scene;
-
-        // Auto-center & scale
-        const box    = new THREE.Box3().setFromObject(skull);
-        const center = box.getCenter(new THREE.Vector3());
-        const size   = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale  = 2.4 / maxDim;
-
-        skull.position.sub(center.multiplyScalar(scale));
-        skull.scale.setScalar(scale);
-
-        // Shadows & materials
-        skull.traverse(function (child) {
-          if (child.isMesh) {
-            child.castShadow    = true;
-            child.receiveShadow = true;
-            if (child.material) {
-              child.material.envMapIntensity = 0.4;
-            }
-          }
-        });
-
-        scene.add(skull);
-        hideLoading();
-        showAnnotations();
-      },
-
-      // onProgress
+      onModelLoad,
       function (xhr) {
         if (xhr.lengthComputable) {
-          const pct = (xhr.loaded / xhr.total) * 100;
-          progressBar.style.width = pct + '%';
+          progressEl.style.width = ((xhr.loaded / xhr.total) * 100) + '%';
         }
       },
-
-      // onError
       function (err) {
-        console.warn('GLB not found — showing placeholder.', err);
+        console.warn('GLB no encontrado — usando placeholder.', err);
         buildPlaceholder();
         hideLoading();
-        showAnnotations();
       }
     );
   }
 
-  /* Placeholder geometry when GLB is missing */
-  function buildPlaceholder() {
-    const geo  = new THREE.SphereGeometry(1, 32, 32);
-    const mat  = new THREE.MeshStandardMaterial({
-      color: 0xc4b49a, roughness: 0.65, metalness: 0.1
+  function onModelLoad(gltf) {
+    skullRoot = gltf.scene;
+
+    /* Auto center + scale */
+    var box    = new THREE.Box3().setFromObject(skullRoot);
+    var center = box.getCenter(new THREE.Vector3());
+    var size   = box.getSize(new THREE.Vector3());
+    var scale  = 2.6 / Math.max(size.x, size.y, size.z);
+
+    skullRoot.position.sub(center.multiplyScalar(scale));
+    skullRoot.scale.setScalar(scale);
+
+    /* Collect all meshes */
+    skullRoot.traverse(function (child) {
+      if (!child.isMesh) return;
+      child.castShadow    = true;
+      child.receiveShadow = true;
+
+      var origMat = child.material.clone();
+
+      var hlMat = child.material.clone();
+      hlMat.emissive    = new THREE.Color(0xff4400);
+      hlMat.emissiveIntensity = 0.35;
+      if (hlMat.color) hlMat.color.multiplyScalar(1.15);
+
+      allMeshes.push({
+        mesh:         child,
+        origPos:      child.position.clone(),
+        origMat:      origMat,
+        highlightMat: hlMat,
+        targetOffset: new THREE.Vector3(),
+        currentOffset: new THREE.Vector3(),
+      });
     });
-    skull = new THREE.Mesh(geo, mat);
-    skull.castShadow = true;
-    scene.add(skull);
+
+    console.log('[Skull] Meshes encontrados:', allMeshes.length);
+    allMeshes.forEach(function (m, i) {
+      console.log('  [' + i + ']', m.mesh.name || '(sin nombre)');
+    });
+
+    scene.add(skullRoot);
+    hideLoading();
   }
 
-  /* ── Loading UI ──────────────────────────────────────────── */
+  function buildPlaceholder() {
+    var geo = new THREE.SphereGeometry(1, 48, 48);
+    var mat = new THREE.MeshStandardMaterial({ color: 0xc4b49a, roughness: 0.6, metalness: 0.1 });
+    skullRoot = new THREE.Mesh(geo, mat);
+    skullRoot.castShadow = true;
+    allMeshes.push({
+      mesh: skullRoot,
+      origPos: skullRoot.position.clone(),
+      origMat: mat,
+      highlightMat: mat.clone(),
+      targetOffset: new THREE.Vector3(),
+      currentOffset: new THREE.Vector3(),
+    });
+    scene.add(skullRoot);
+  }
+
   function hideLoading() {
-    progressBar.style.width = '100%';
-    setTimeout(function () {
-      loadingScreen.classList.add('hidden');
-    }, 600);
+    progressEl.style.width = '100%';
+    setTimeout(function () { loadingEl.classList.add('hidden'); }, 700);
   }
 
-  /* ── Annotations staggered reveal ───────────────────────── */
-  function showAnnotations() {
-    const items = document.querySelectorAll('.annotation');
-    items.forEach(function (el, i) {
-      setTimeout(function () {
-        el.classList.add('visible');
-      }, 800 + i * 170);
+  /* ── Find meshes for a bone ──────────────────────────────── */
+  function findMeshesForBone(bone) {
+    if (!bone.keywords.length) return [];
+    var found = [];
+    allMeshes.forEach(function (m) {
+      var name = (m.mesh.name || '').toLowerCase();
+      for (var i = 0; i < bone.keywords.length; i++) {
+        if (name.indexOf(bone.keywords[i]) !== -1) {
+          found.push(m);
+          break;
+        }
+      }
+    });
+    /* Fallback: if no name match and there are multiple meshes,
+       use index cycling so something always highlights */
+    if (!found.length && allMeshes.length > 1) {
+      var boneIdx = BONES.indexOf(bone);
+      var meshIdx = (boneIdx - 1 + allMeshes.length) % allMeshes.length;
+      found = [allMeshes[meshIdx]];
+    } else if (!found.length && allMeshes.length === 1) {
+      found = allMeshes; /* single-mesh skull: highlight whole thing */
+    }
+    return found;
+  }
+
+  /* ── Activate a bone section ─────────────────────────────── */
+  function activateBone(index) {
+    if (index === activeIndex) return;
+    activeIndex = index;
+
+    var bone = BONES[index];
+
+    /* Camera target */
+    targetCamPos.set(bone.camPos.x, bone.camPos.y, bone.camPos.z);
+    targetLookAt.set(bone.lookAt.x, bone.lookAt.y, bone.lookAt.z);
+
+    /* Key light */
+    highlightLight.position.set(bone.keyLight.x, bone.keyLight.y, bone.keyLight.z);
+
+    /* Timeline dots */
+    tDots.forEach(function (d, i) {
+      d.classList.toggle('active', i === index);
+    });
+
+    /* Sections */
+    sections.forEach(function (s, i) {
+      s.classList.toggle('active', i === index);
+    });
+
+    /* Bone glow */
+    boneGlow.classList.toggle('active', index > 0);
+
+    /* Reset all meshes */
+    allMeshes.forEach(function (m) {
+      m.mesh.material = m.origMat;
+      m.targetOffset.set(0, 0, 0);
+    });
+    activeMeshes = [];
+
+    /* Highlight new bone */
+    if (index > 0) {
+      var found = findMeshesForBone(bone);
+      found.forEach(function (m) {
+        m.mesh.material = m.highlightMat;
+        m.targetOffset.set(
+          bone.explode.x * 0.18,
+          bone.explode.y * 0.18,
+          bone.explode.z * 0.18
+        );
+        activeMeshes.push(m);
+      });
+    }
+  }
+
+  /* ── Scroll detection ────────────────────────────────────── */
+  function setupScroll() {
+    /* IntersectionObserver — fires when section hits 50% visibility */
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var idx = parseInt(entry.target.dataset.index, 10);
+          activateBone(idx);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    sections.forEach(function (s) { observer.observe(s); });
+
+    /* Activate intro on load */
+    activateBone(0);
+    sections[0].classList.add('active');
+  }
+
+  /* ── Events ──────────────────────────────────────────────── */
+  function setupEvents() {
+    document.addEventListener('mousemove', function (e) {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursorDot.style.left = mouseX + 'px';
+      cursorDot.style.top  = mouseY + 'px';
+    });
+
+    window.addEventListener('resize', function () {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
   }
 
   /* ── Render loop ─────────────────────────────────────────── */
   function animate() {
-    frameId = requestAnimationFrame(animate);
-    const t    = clock.getElapsedTime();
-    const delta = clock.getDelta ? 0.016 : 0.016; // fallback
+    requestAnimationFrame(animate);
+    var t = clock.getElapsedTime();
 
-    controls.autoRotate = autoRotate;
-    controls.update();
+    /* Camera lerp */
+    camera.position.lerp(targetCamPos, 0.032);
+    currentLookAt.lerp(targetLookAt, 0.032);
+    camera.lookAt(currentLookAt);
 
-    /* Parallax lerp */
-    parallaxX += (mouseNX * 0.18 - parallaxX) * 0.04;
-    parallaxY += (mouseNY * 0.12 - parallaxY) * 0.04;
-
-    /* Skull animation */
-    if (skull) {
-      skull.rotation.y += (parallaxX - skull.rotation.y) * 0.03;
-      skull.position.y   = Math.sin(t * 0.6) * 0.06 + parallaxY * 0.2;
+    /* Subtle float on skull root */
+    if (skullRoot && activeIndex === 0) {
+      skullRoot.position.y = Math.sin(t * 0.5) * 0.05;
     }
 
-    /* Fire flicker */
-    const currentIntensity = fireLights[0].intensity;
-    const targetIntensity  = fireTarget;
-    fireLights[0].intensity += (targetIntensity * (2.8 + Math.sin(t * 7.3) * 0.8) - fireLights[0].intensity) * 0.08;
-    fireLights[1].intensity += (targetIntensity * (2.2 + Math.sin(t * 11.7 + 1.3) * 0.6) - fireLights[1].intensity) * 0.08;
+    /* Mesh explode lerp */
+    allMeshes.forEach(function (m) {
+      m.currentOffset.lerp(m.targetOffset, 0.06);
+      m.mesh.position.x = m.origPos.x + m.currentOffset.x;
+      m.mesh.position.y = m.origPos.y + m.currentOffset.y;
+      m.mesh.position.z = m.origPos.z + m.currentOffset.z;
+    });
+
+    /* Emissive pulse on active meshes */
+    activeMeshes.forEach(function (m) {
+      m.highlightMat.emissiveIntensity = 0.28 + Math.sin(t * 2.5) * 0.08;
+    });
+
+    /* Cursor ring lag */
+    ringX += (mouseX - ringX) * 0.1;
+    ringY += (mouseY - ringY) * 0.1;
+    cursorRing.style.left = ringX + 'px';
+    cursorRing.style.top  = ringY + 'px';
 
     renderer.render(scene, camera);
   }
 
-  /* ── Mouse / cursor ──────────────────────────────────────── */
-  document.addEventListener('mousemove', function (e) {
-    mouseX  = e.clientX;
-    mouseY  = e.clientY;
-    mouseNX = (e.clientX / window.innerWidth)  * 2 - 1;
-    mouseNY = (e.clientY / window.innerHeight) * 2 - 1;
-
-    cursorDot.style.left = mouseX + 'px';
-    cursorDot.style.top  = mouseY + 'px';
-  });
-
-  /* Cursor ring lag via rAF */
-  function updateRing() {
-    ringX += (mouseX - ringX) * 0.12;
-    ringY += (mouseY - ringY) * 0.12;
-    cursorRing.style.left = ringX + 'px';
-    cursorRing.style.top  = ringY + 'px';
-    requestAnimationFrame(updateRing);
-  }
-  updateRing();
-
-  /* ── Resize ──────────────────────────────────────────────── */
-  window.addEventListener('resize', function () {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  /* ── Control buttons ─────────────────────────────────────── */
-  document.getElementById('btn-lava').addEventListener('click', function () {
-    fireTarget = 1;
-    fireGlow.classList.add('active');
-    this.classList.add('active');
-    document.getElementById('btn-dark').classList.remove('active');
-  });
-
-  document.getElementById('btn-dark').addEventListener('click', function () {
-    fireTarget = 0;
-    fireGlow.classList.remove('active');
-    this.classList.add('active');
-    document.getElementById('btn-lava').classList.remove('active');
-  });
-
-  document.getElementById('btn-rotate').addEventListener('click', function () {
-    autoRotate = !autoRotate;
-    this.classList.toggle('active', autoRotate);
-  });
-
-  document.getElementById('btn-annotations').addEventListener('click', function () {
-    annotationsVisible = !annotationsVisible;
-    annotations.classList.toggle('hidden', !annotationsVisible);
-    this.classList.toggle('active', annotationsVisible);
-  });
-
   /* ── Boot ─────────────────────────────────────────────────── */
-  initThree();
+  init();
 
 })();
