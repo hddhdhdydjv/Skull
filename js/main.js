@@ -92,6 +92,7 @@
   /* ── Three.js state ─────────────────────────────────────── */
   var scene, camera, renderer, clock;
   var skullGroup, skullMesh;
+  var loadingPlaceholder;   /* esfera spinning durante carga */
   var spotLight, ambientLight;
   var raycaster, mouse2D;
 
@@ -130,13 +131,14 @@
     clock = new THREE.Clock();
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x060607);
-    scene.fog = new THREE.FogExp2(0x060607, 0.032);
+    /* Sin background: el canvas es transparente → intro text visible detrás */
+    scene.background = null;
 
     camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(0, 0, 5.5);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setClearColor(0x000000, 0);        /* fondo transparente */
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputEncoding     = THREE.sRGBEncoding;
@@ -153,10 +155,26 @@
     mouse2D   = new THREE.Vector2();
 
     buildLights();
+    addLoadingPlaceholder();
     loadModel();
     setupScroll();
     setupEvents();
     animate();
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     LOADING PLACEHOLDER
+     Esfera que rota durante la carga — visible a través del
+     centro transparente del loading screen.
+  ───────────────────────────────────────────────────────── */
+  function addLoadingPlaceholder() {
+    var geo = new THREE.SphereGeometry(0.9, 48, 48);
+    var mat = new THREE.MeshStandardMaterial({
+      color: 0xc4b49a, roughness: 0.55, metalness: 0.08
+    });
+    loadingPlaceholder = new THREE.Mesh(geo, mat);
+    loadingPlaceholder.castShadow = true;
+    scene.add(loadingPlaceholder);
   }
 
   /* ─────────────────────────────────────────────────────────
@@ -213,6 +231,13 @@
         });
 
         skullGroup.add(skullMesh);
+
+        /* Quitar placeholder */
+        if (loadingPlaceholder) {
+          scene.remove(loadingPlaceholder);
+          loadingPlaceholder.geometry.dispose();
+          loadingPlaceholder = null;
+        }
 
         /* Compute bone positions from bbox in local GLB space */
         computeBonePositions(box, center.divideScalar(scale), size);
@@ -465,6 +490,12 @@
     requestAnimationFrame(animate);
     var t = clock.getElapsedTime();
 
+    /* Placeholder rotation during loading */
+    if (loadingPlaceholder) {
+      loadingPlaceholder.rotation.y = t * 0.6;
+      loadingPlaceholder.position.y = Math.sin(t * 0.8) * 0.06;
+    }
+
     /* Skull rotation */
     cRotY = lerp(cRotY, tRotY, 0.028);
     cRotX = lerp(cRotX, tRotX, 0.028);
@@ -498,21 +529,14 @@
     spotLight.intensity    = lerp(spotLight.intensity,    tSpotInt, 0.04);
     ambientLight.intensity = lerp(ambientLight.intensity, tAmbInt,  0.04);
 
-    /* Hover raycasting */
+    /* Hover raycasting — solo cambia cursor, sin tooltip de texto */
     if (skullMesh) {
       raycaster.setFromCamera(mouse2D, camera);
       var hits = raycaster.intersectObject(skullGroup, true);
       if (hits.length > 0) {
-        if (!hovered) {
-          hovered = true;
-          document.body.classList.add('hovering');
-          tooltipText.textContent = BONES[activeIndex].label || 'Explorá el cráneo';
-          tooltip.classList.add('visible');
-        }
+        if (!hovered) { hovered = true;  document.body.classList.add('hovering'); }
       } else if (hovered) {
-        hovered = false;
-        document.body.classList.remove('hovering');
-        tooltip.classList.remove('visible');
+        hovered = false; document.body.classList.remove('hovering');
       }
     }
 
