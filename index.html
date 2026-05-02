@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Anatomy Unveiled</title>
+  <meta name="description" content="Visualización 3D interactiva del cráneo humano — Anatomía del fuego interior" />
+  <title>Cráneo — Anatomía 3D</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
 
-  <!-- Three.js CDN (global, NO ES modules) -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -30,107 +30,124 @@
     </div>
   </div>
 
-  <!-- Fixed 3D canvas -->
-  <div id="canvas-container"></div>
-
   <!-- Overlays -->
   <div id="vignette"></div>
-  <div id="bone-glow"></div>
+  <div id="fire-glow"></div>
 
-  <!-- Fixed header -->
-  <header id="header">
-    <span class="header-top">ANATOMY</span>
-    <span class="header-bot">UNVEILED</span>
-  </header>
+  <!-- Three.js canvas -->
+  <div id="canvas-container"></div>
 
-  <!-- Fixed left timeline -->
-  <nav id="timeline">
-    <div id="timeline-line"></div>
-    <div class="t-dot active" data-index="0"><span>—</span></div>
-    <div class="t-dot" data-index="1"><span>01</span></div>
-    <div class="t-dot" data-index="2"><span>02</span></div>
-    <div class="t-dot" data-index="3"><span>03</span></div>
-    <div class="t-dot" data-index="4"><span>04</span></div>
-    <div class="t-dot" data-index="5"><span>05</span></div>
-    <div class="t-dot" data-index="6"><span>06</span></div>
-  </nav>
+  <!-- UI layer -->
+  <div id="ui">
 
-  <!-- Scroll wrapper -->
-  <div id="scroll-wrapper">
+    <!-- Header -->
+    <header id="header">
+      <div class="header-title">CRÁNEO</div>
+      <div class="header-subtitle">Anatomía del fuego interior</div>
+    </header>
 
-    <!-- 0 · Intro -->
-    <section class="bone-section" data-index="0">
-      <div class="bone-text intro-text">
-        <p class="intro-label">Homo Sapiens / 22 huesos</p>
-        <h1 class="intro-title">CRÁNEO</h1>
-        <p class="intro-sub">Scrolleá para explorar<br>la anatomía del fuego interior</p>
-        <div class="scroll-hint">
-          <div class="scroll-arrow"></div>
+    <!-- Meta info -->
+    <div id="meta-info">
+      <div class="meta-line"><span>Homo Sapiens</span></div>
+      <div class="meta-line"><span>Vista lateral</span></div>
+      <div class="meta-line">— <span>22 huesos</span></div>
+    </div>
+
+    <!-- Anatomical annotations -->
+    <div id="annotations">
+
+      <!-- Left side -->
+      <div class="annotation left" style="top: 22%; left: 12%;">
+        <div class="ann-dot"></div>
+        <div class="ann-line"></div>
+        <div class="ann-text">
+          <div class="ann-name">Hueso Frontal</div>
+          <div class="ann-latin">Os frontale</div>
+          <div class="ann-desc">Forma la frente y el techo<br>de las cavidades orbitarias</div>
         </div>
       </div>
-    </section>
 
-    <!-- 1 · Frontal -->
-    <section class="bone-section" data-index="1">
-      <div class="bone-text">
-        <span class="bone-number">01</span>
-        <h2 class="bone-title">HUESO<br>FRONTAL</h2>
-        <p class="bone-latin">Os frontale</p>
-        <p class="bone-desc">Forma la frente y el techo de las cavidades orbitarias. Es uno de los huesos más prominentes del neurocráneo, protegiendo los lóbulos frontales del cerebro.</p>
+      <div class="annotation left" style="top: 32%; left: 8%;">
+        <div class="ann-dot"></div>
+        <div class="ann-line"></div>
+        <div class="ann-text">
+          <div class="ann-name">Hueso Parietal</div>
+          <div class="ann-latin">Os parietale</div>
+          <div class="ann-desc">Par de huesos que forman<br>la bóveda craneal lateral</div>
+        </div>
       </div>
-    </section>
 
-    <!-- 2 · Parietal -->
-    <section class="bone-section" data-index="2">
-      <div class="bone-text">
-        <span class="bone-number">02</span>
-        <h2 class="bone-title">HUESO<br>PARIETAL</h2>
-        <p class="bone-latin">Os parietale</p>
-        <p class="bone-desc">Par de huesos planos que forman los lados y la bóveda superior del cráneo. Se articulan entre sí en la sutura sagital, y con el frontal en la sutura coronal.</p>
+      <div class="annotation left" style="top: 52%; left: 6%;">
+        <div class="ann-dot"></div>
+        <div class="ann-line"></div>
+        <div class="ann-text">
+          <div class="ann-name">Hueso Occipital</div>
+          <div class="ann-latin">Os occipitale</div>
+          <div class="ann-desc">Base posterior del cráneo,<br>contiene el foramen magnum</div>
+        </div>
       </div>
-    </section>
 
-    <!-- 3 · Occipital -->
-    <section class="bone-section" data-index="3">
-      <div class="bone-text">
-        <span class="bone-number">03</span>
-        <h2 class="bone-title">HUESO<br>OCCIPITAL</h2>
-        <p class="bone-latin">Os occipitale</p>
-        <p class="bone-desc">Forma la base posterior del cráneo. Contiene el foramen magnum, la apertura por donde la médula espinal se conecta con el tronco encefálico.</p>
+      <!-- Right side -->
+      <div class="annotation right" style="top: 28%; right: 10%;">
+        <div class="ann-dot"></div>
+        <div class="ann-line"></div>
+        <div class="ann-text">
+          <div class="ann-name">Cavidad Orbital</div>
+          <div class="ann-latin">Orbita oculi</div>
+          <div class="ann-desc">Cuenca ósea que aloja<br>y protege el globo ocular</div>
+        </div>
       </div>
-    </section>
 
-    <!-- 4 · Temporal -->
-    <section class="bone-section" data-index="4">
-      <div class="bone-text">
-        <span class="bone-number">04</span>
-        <h2 class="bone-title">HUESO<br>TEMPORAL</h2>
-        <p class="bone-latin">Os temporale</p>
-        <p class="bone-desc">Aloja el oído interno y la articulación temporomandibular. Par situado en la base lateral del cráneo, contiene el proceso mastoideo y el meato auditivo externo.</p>
+      <div class="annotation right" style="top: 46%; right: 8%;">
+        <div class="ann-dot"></div>
+        <div class="ann-line"></div>
+        <div class="ann-text">
+          <div class="ann-name">Arco Cigomático</div>
+          <div class="ann-latin">Arcus zygomaticus</div>
+          <div class="ann-desc">Puente óseo lateral,<br>punto de anclaje muscular</div>
+        </div>
       </div>
-    </section>
 
-    <!-- 5 · Orbital -->
-    <section class="bone-section" data-index="5">
-      <div class="bone-text">
-        <span class="bone-number">05</span>
-        <h2 class="bone-title">CAVIDAD<br>ORBITAL</h2>
-        <p class="bone-latin">Orbita oculi</p>
-        <p class="bone-desc">Cuenca ósea cónica formada por siete huesos diferentes. Aloja y protege el globo ocular, los músculos extraoculares y el nervio óptico.</p>
+      <div class="annotation right" style="top: 62%; right: 12%;">
+        <div class="ann-dot"></div>
+        <div class="ann-line"></div>
+        <div class="ann-text">
+          <div class="ann-name">Hueso Temporal</div>
+          <div class="ann-latin">Os temporale</div>
+          <div class="ann-desc">Aloja el oído interno y<br>la articulación mandibular</div>
+        </div>
       </div>
-    </section>
 
-    <!-- 6 · Cigomático -->
-    <section class="bone-section" data-index="6">
-      <div class="bone-text">
-        <span class="bone-number">06</span>
-        <h2 class="bone-title">ARCO<br>CIGOMÁTICO</h2>
-        <p class="bone-latin">Arcus zygomaticus</p>
-        <p class="bone-desc">Puente óseo lateral que conecta el hueso cigomático con el proceso cigomático del temporal. Principal punto de anclaje del músculo masetero.</p>
-      </div>
-    </section>
+    </div><!-- /annotations -->
 
-  </div><!-- /scroll-wrapper -->
+    <!-- Controls panel -->
+    <div id="controls">
+      <button class="ctrl-btn" id="btn-lava">
+        <span class="ctrl-icon">🔥</span>
+        <span>Modo Lava</span>
+      </button>
+      <button class="ctrl-btn" id="btn-dark">
+        <span class="ctrl-icon">💀</span>
+        <span>Modo Oscuro</span>
+      </button>
+      <button class="ctrl-btn" id="btn-rotate">
+        <span class="ctrl-icon">⟳</span>
+        <span>Auto-rotar</span>
+      </button>
+      <button class="ctrl-btn active" id="btn-annotations">
+        <span class="ctrl-icon">◎</span>
+        <span>Anotaciones</span>
+      </button>
+    </div>
+
+    <!-- Footer hints -->
+    <footer id="footer">
+      <span class="hint">Arrastrar</span>
+      <span class="hint">Zoom</span>
+      <span class="hint">Anatomía</span>
+    </footer>
+
+  </div><!-- /ui -->
 
   <script src="js/main.js"></script>
 </body>
