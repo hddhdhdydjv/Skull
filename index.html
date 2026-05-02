@@ -33,6 +33,27 @@
   <!-- Fixed 3D canvas -->
   <div id="canvas-container"></div>
 
+  <!-- SVG connector overlay -->
+  <svg id="svg-connectors" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="2.5" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <!-- Glow copy of line -->
+    <line id="conn-line-glow" stroke="rgba(255,106,0,0.18)" stroke-width="4"
+          stroke-linecap="round" filter="url(#glow)"/>
+    <!-- Main line -->
+    <line id="conn-line" stroke="rgba(255,106,0,0.55)" stroke-width="0.75"
+          stroke-linecap="round" stroke-dasharray="3 5"/>
+    <!-- Dot at bone -->
+    <circle id="conn-dot-glow" r="7" fill="rgba(255,106,0,0.2)" filter="url(#glow)"/>
+    <circle id="conn-dot" r="3.5" fill="#ff6a00"/>
+    <!-- Dot at panel -->
+    <circle id="conn-dot-panel" r="2.5" fill="rgba(255,106,0,0.6)"/>
+  </svg>
+
   <!-- Overlays -->
   <div id="vignette"></div>
 

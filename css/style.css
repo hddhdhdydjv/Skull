@@ -213,6 +213,19 @@ canvas { display: block; width: 100% !important; height: 100% !important; }
   letter-spacing: .02em;
 }
 
+/* ── SVG connector ───────────────────────────────────────── */
+#svg-connectors {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 8;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .6s ease;
+}
+#svg-connectors.visible { opacity: 1; }
+
 /* ── Hover tooltip ───────────────────────────────────────── */
 #tooltip {
   position: fixed;
