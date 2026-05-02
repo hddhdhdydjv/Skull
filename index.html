@@ -21,13 +21,12 @@
   <!-- Hover tooltip -->
   <div id="tooltip"><span id="tooltip-text"></span></div>
 
-  <!-- Loading (centro transparente → muestra la calavera 3D girando debajo) -->
+  <!-- Loading -->
   <div id="loading-screen">
-    <div id="loading-bottom">
-      <div class="loading-label">Cargando anatomía</div>
-      <div class="progress-bar-wrap">
-        <div class="progress-bar" id="progress-bar"></div>
-      </div>
+    <div class="loading-mark">×</div>
+    <div class="loading-label">Cargando anatomía</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
     </div>
   </div>
 
@@ -56,10 +55,14 @@
   <div id="vignette"></div>
   <div id="section-fade"></div>
 
-  <!-- Large background intro text (dissolves to small header) -->
+  <!-- Large background intro text — letras con space-between para llenar todo el ancho -->
   <div id="intro-bg-text">
-    <span class="ibt-line">ANATOMY</span>
-    <span class="ibt-line light">UNVEILED</span>
+    <div class="ibt-line">
+      <span>A</span><span>N</span><span>A</span><span>T</span><span>O</span><span>M</span><span>Y</span>
+    </div>
+    <div class="ibt-line light">
+      <span>U</span><span>N</span><span>V</span><span>E</span><span>I</span><span>L</span><span>E</span><span>D</span>
+    </div>
   </div>
 
   <!-- Small fixed header (appears after intro) -->

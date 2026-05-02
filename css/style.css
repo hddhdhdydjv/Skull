@@ -32,29 +32,28 @@ canvas { display: block; width: 100% !important; height: 100% !important; }
 /* ── Loading ───────────────────────────────────────────────── */
 #loading-screen {
   position: fixed; inset: 0; z-index: 200;
-  /* Centro transparente: la calavera 3D se ve debajo */
-  background: radial-gradient(ellipse at 50% 46%,
-    transparent 18%,
-    rgba(6,6,7,.55) 38%,
-    rgba(6,6,7,.95) 60%,
-    rgba(6,6,7,1) 75%
-  );
-  pointer-events: none;
+  background: var(--void);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 24px;
   transition: opacity .9s ease, visibility .9s ease;
 }
-#loading-screen.hidden { opacity: 0; visibility: hidden; }
+#loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
-#loading-bottom {
-  position: absolute;
-  bottom: 72px; left: 0; right: 0;
-  display: flex; flex-direction: column;
-  align-items: center; gap: 14px;
+.loading-mark {
+  font-family: 'Inter', sans-serif; font-weight: 200;
+  font-size: 48px; color: rgba(196,180,154,.4);
+  line-height: 1;
+  animation: markPulse 1.6s ease-in-out infinite;
+}
+@keyframes markPulse {
+  0%,100% { opacity: .3; transform: scale(1); }
+  50%     { opacity: .8; transform: scale(1.05); }
 }
 .loading-label {
   font-family: 'Inter', sans-serif; font-weight: 200;
   font-size: 9px; letter-spacing: 6px; color: var(--dim); text-transform: uppercase;
 }
-.progress-bar-wrap { width: 160px; height: 1px; background: rgba(196,180,154,.1); }
+.progress-bar-wrap { width: 180px; height: 1px; background: rgba(196,180,154,.1); }
 .progress-bar { height: 100%; width: 0%; background: var(--fire); transition: width .3s ease; }
 
 /* ── Vignette ──────────────────────────────────────────────── */
@@ -68,28 +67,28 @@ canvas { display: block; width: 100% !important; height: 100% !important; }
 #intro-bg-text {
   position: fixed; inset: 0; z-index: 1;
   display: flex; flex-direction: column;
-  align-items: flex-start; justify-content: center;
-  padding: 0;
+  justify-content: center;
   pointer-events: none;
   transition: opacity .9s ease;
 }
 #intro-bg-text.hidden { opacity: 0; }
 
+/* Cada línea = flex row, letras distribuidas de borde a borde */
 .ibt-line {
-  display: block;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 2.5vw;
   font-family: 'Inter', sans-serif;
   font-weight: 700;
-  /* Tamaño reducido para que entren todas las letras */
-  font-size: clamp(52px, 8vw, 128px);
-  letter-spacing: .3em;
-  line-height: .9;
+  font-size: clamp(56px, 10.5vw, 170px);
+  line-height: .92;
   color: #fff;
-  white-space: nowrap;
-  padding-left: 1.5vw;
+  user-select: none;
 }
 .ibt-line.light {
   font-weight: 200;
-  color: rgba(255,255,255,.68);
+  color: rgba(255,255,255,.65);
 }
 
 /* ── Small header (hidden in intro, fades in after) ─────────── */
