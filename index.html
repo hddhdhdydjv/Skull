@@ -14,7 +14,7 @@
 </head>
 <body>
 
-  <!-- Custom cursor -->
+  <!-- Cursor -->
   <div id="cursor-dot"></div>
   <div id="cursor-ring"></div>
 
@@ -33,63 +33,67 @@
   <!-- Fixed 3D canvas -->
   <div id="canvas-container"></div>
 
-  <!-- SVG connector overlay -->
+  <!-- SVG connector (sits between canvas and text) -->
   <svg id="svg-connectors" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <filter id="glow">
-        <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <filter id="dot-glow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    <!-- Glow copy of line -->
-    <line id="conn-line-glow" stroke="rgba(255,106,0,0.18)" stroke-width="4"
-          stroke-linecap="round" filter="url(#glow)"/>
-    <!-- Main line -->
-    <line id="conn-line" stroke="rgba(255,106,0,0.55)" stroke-width="0.75"
-          stroke-linecap="round" stroke-dasharray="3 5"/>
+    <!-- Glow copy -->
+    <path id="conn-glow" fill="none" stroke="rgba(255,106,0,0.12)" stroke-width="6" stroke-linecap="round"/>
+    <!-- Main dashed path -->
+    <path id="conn-path" fill="none" stroke="rgba(255,106,0,0.5)" stroke-width="0.8"
+          stroke-linecap="round" stroke-dasharray="2 6"/>
     <!-- Dot at bone -->
-    <circle id="conn-dot-glow" r="7" fill="rgba(255,106,0,0.2)" filter="url(#glow)"/>
-    <circle id="conn-dot" r="3.5" fill="#ff6a00"/>
-    <!-- Dot at panel -->
-    <circle id="conn-dot-panel" r="2.5" fill="rgba(255,106,0,0.6)"/>
+    <circle id="conn-bone-glow" r="8"  fill="rgba(255,106,0,0.15)" filter="url(#dot-glow)"/>
+    <circle id="conn-bone-dot"  r="3"  fill="#ff6a00"/>
   </svg>
 
   <!-- Overlays -->
   <div id="vignette"></div>
+  <div id="section-fade"></div>
 
-  <!-- Fixed header -->
+  <!-- Large background intro text (dissolves to small header) -->
+  <div id="intro-bg-text">
+    <span class="ibt-line">ANATOMY</span>
+    <span class="ibt-line light">UNVEILED</span>
+  </div>
+
+  <!-- Small fixed header (appears after intro) -->
   <div id="header">
     <span class="h-top">ANATOMY</span>
     <span class="h-bot">UNVEILED</span>
   </div>
 
-  <!-- Fixed scroll hint (fades after first scroll) -->
+  <!-- Scroll indicator -->
   <div id="scroll-hint">
-    <div class="sh-line"></div>
     <span class="sh-label">scroll</span>
+    <div class="sh-line"></div>
   </div>
 
   <!-- Scrollable sections -->
   <div id="scroll-wrapper">
 
     <!-- 0 · Intro -->
-    <section class="bone-section" data-index="0">
-      <!-- no annotation -->
-    </section>
+    <section class="bone-section" data-index="0"></section>
 
-    <!-- 1 · Frontal — text LEFT, skull RIGHT -->
+    <!-- 1 · Frontal — panel LEFT -->
     <section class="bone-section" data-index="1">
       <div class="ann-panel side-left">
+        <div class="ann-connector-origin"></div>
         <span class="ann-number">01</span>
         <h2 class="ann-title">HUESO<br>FRONTAL</h2>
         <p class="ann-latin">Os frontale</p>
-        <p class="ann-desc">Forma la frente y el techo de las cavidades orbitarias. Es uno de los huesos más prominentes del neurocráneo, protegiendo los lóbulos frontales.</p>
+        <p class="ann-desc">Forma la frente y el techo de las cavidades orbitarias. Es uno de los huesos más prominentes del neurocráneo, protegiendo los lóbulos frontales del cerebro.</p>
       </div>
     </section>
 
-    <!-- 2 · Parietal — text RIGHT, skull LEFT -->
+    <!-- 2 · Parietal — panel RIGHT -->
     <section class="bone-section" data-index="2">
       <div class="ann-panel side-right">
+        <div class="ann-connector-origin"></div>
         <span class="ann-number">02</span>
         <h2 class="ann-title">HUESO<br>PARIETAL</h2>
         <p class="ann-latin">Os parietale</p>
@@ -97,9 +101,10 @@
       </div>
     </section>
 
-    <!-- 3 · Occipital — text LEFT, skull RIGHT -->
+    <!-- 3 · Occipital — panel LEFT -->
     <section class="bone-section" data-index="3">
       <div class="ann-panel side-left">
+        <div class="ann-connector-origin"></div>
         <span class="ann-number">03</span>
         <h2 class="ann-title">HUESO<br>OCCIPITAL</h2>
         <p class="ann-latin">Os occipitale</p>
@@ -107,9 +112,10 @@
       </div>
     </section>
 
-    <!-- 4 · Temporal — text RIGHT, skull LEFT -->
+    <!-- 4 · Temporal — panel RIGHT -->
     <section class="bone-section" data-index="4">
       <div class="ann-panel side-right">
+        <div class="ann-connector-origin"></div>
         <span class="ann-number">04</span>
         <h2 class="ann-title">HUESO<br>TEMPORAL</h2>
         <p class="ann-latin">Os temporale</p>
@@ -117,9 +123,10 @@
       </div>
     </section>
 
-    <!-- 5 · Orbital — text LEFT, skull RIGHT -->
+    <!-- 5 · Orbital — panel LEFT -->
     <section class="bone-section" data-index="5">
       <div class="ann-panel side-left">
+        <div class="ann-connector-origin"></div>
         <span class="ann-number">05</span>
         <h2 class="ann-title">CAVIDAD<br>ORBITAL</h2>
         <p class="ann-latin">Orbita oculi</p>
@@ -127,9 +134,10 @@
       </div>
     </section>
 
-    <!-- 6 · Cigomático — text RIGHT, skull LEFT -->
+    <!-- 6 · Cigomático — panel RIGHT -->
     <section class="bone-section" data-index="6">
       <div class="ann-panel side-right">
+        <div class="ann-connector-origin"></div>
         <span class="ann-number">06</span>
         <h2 class="ann-title">ARCO<br>CIGOMÁTICO</h2>
         <p class="ann-latin">Arcus zygomaticus</p>

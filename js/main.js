@@ -1,212 +1,141 @@
 /* ============================================================
    ANATOMY UNVEILED — main.js
-   Scroll-driven spotlight + skull rotation per bone
    ============================================================ */
 
 (function () {
   'use strict';
 
-  /* ─────────────────────────────────────────────────────────
-     BONE DATA
-     pivotX  : desktop — skull shifts right (+) or left (-)
-     pivotY  : mobile  — skull shifts up (+) to reveal space below
-     rotY    : skull Y rotation to face camera toward that bone
-     rotX    : skull X tilt
-     camZ    : camera distance (zoom)
-     camY    : camera height
-     spotPos : world-space spotlight source position
-     spotTgt : world-space spotlight target (on skull)
-     spotInt : spotlight intensity
-     side    : which side the annotation lives on desktop
-  ───────────────────────────────────────────────────────── */
-  /* bonePos: approximate position of the bone in skullMesh LOCAL space.
-     The skull is auto-centered at origin and scaled to ~2.5 units max.
-     These are updated via `applyMatrix4(skullMesh.matrixWorld)` each frame. */
+  /* ── Bone definitions ───────────────────────────────────────
+     bonePos: set from bounding-box after model loads (see computeBonePositions)
+     pivotX:  desktop — skull offset on X (+ = right, text on left)
+     pivotY:  mobile  — skull offset on Y (+ = up, text below)
+     side:    annotation panel side ('left' | 'right' | null)
+  ─────────────────────────────────────────────────────────── */
   var BONES = [
     {
-      id: 'intro',
-      label: null,
-      rotY:    0,
-      rotX:    0,
-      camZ:    5.5,
-      camY:    0,
-      pivotX:  0,
-      pivotY:  0,
-      spotPos: { x:  2,    y:  5,   z:  4   },
-      spotTgt: { x:  0,    y:  0,   z:  0   },
-      spotInt: 2.5,
-      ambInt:  0.9,
-      bonePos: new THREE.Vector3(0, 0, 0),
-      side:    null,
+      id: 'intro', label: null, side: null,
+      rotY: 0, rotX: 0, camZ: 5.5, camY: 0,
+      pivotX: 0, pivotY: 0,
+      spotPos: { x: 2, y: 5, z: 4 }, spotTgt: { x: 0, y: 0, z: 0 },
+      spotInt: 2.5, ambInt: 0.9,
+      bonePos: new THREE.Vector3(),
     },
     {
-      id: 'frontal',
-      label: 'Hueso Frontal',
-      rotY:    0,
-      rotX:   -0.08,
-      camZ:    3.9,
-      camY:    0.35,
-      pivotX:  1.05,
-      pivotY:  0.75,
-      spotPos: { x:  0.3,  y:  5,   z:  6   },
-      spotTgt: { x:  0.1,  y:  0.8, z:  0   },
-      spotInt: 14,
-      ambInt:  0.25,
-      bonePos: new THREE.Vector3( 0.05, 0.72,  0.52),  // forehead
-      side:    'left',
+      id: 'frontal', label: 'Hueso Frontal', side: 'left',
+      rotY: 0, rotX: -0.08, camZ: 3.9, camY: 0.35,
+      pivotX: 1.05, pivotY: 0.75,
+      spotPos: { x: 0.3, y: 5, z: 6 }, spotTgt: { x: 0.1, y: 0.8, z: 0 },
+      spotInt: 14, ambInt: 0.22,
+      bonePos: new THREE.Vector3(),
     },
     {
-      id: 'parietal',
-      label: 'Hueso Parietal',
-      rotY:   -0.45,
-      rotX:   -0.25,
-      camZ:    4.1,
-      camY:    0.5,
-      pivotX: -1.05,
-      pivotY:  0.7,
-      spotPos: { x: -4,    y:  6,   z:  2   },
-      spotTgt: { x: -0.2,  y:  0.9, z:  0   },
-      spotInt: 14,
-      ambInt:  0.25,
-      bonePos: new THREE.Vector3(-0.28, 0.90, -0.08),  // top-left
-      side:    'right',
+      id: 'parietal', label: 'Hueso Parietal', side: 'right',
+      rotY: -0.45, rotX: -0.25, camZ: 4.1, camY: 0.5,
+      pivotX: -1.05, pivotY: 0.7,
+      spotPos: { x: -4, y: 6, z: 2 }, spotTgt: { x: -0.2, y: 0.9, z: 0 },
+      spotInt: 14, ambInt: 0.22,
+      bonePos: new THREE.Vector3(),
     },
     {
-      id: 'occipital',
-      label: 'Hueso Occipital',
-      rotY:   -2.8,
-      rotX:    0.1,
-      camZ:    4.3,
-      camY:    0.15,
-      pivotX:  1.05,
-      pivotY:  0.65,
-      spotPos: { x:  0,    y:  3.5, z: -6   },
-      spotTgt: { x:  0,    y:  0.1, z: -0.1 },
-      spotInt: 14,
-      ambInt:  0.25,
-      bonePos: new THREE.Vector3( 0.0,  0.12, -0.88),  // back center
-      side:    'left',
+      id: 'occipital', label: 'Hueso Occipital', side: 'left',
+      rotY: -2.8, rotX: 0.1, camZ: 4.3, camY: 0.15,
+      pivotX: 1.05, pivotY: 0.65,
+      spotPos: { x: 0, y: 3.5, z: -6 }, spotTgt: { x: 0, y: 0.1, z: -0.1 },
+      spotInt: 14, ambInt: 0.22,
+      bonePos: new THREE.Vector3(),
     },
     {
-      id: 'temporal',
-      label: 'Hueso Temporal',
-      rotY:   -1.1,
-      rotX:    0,
-      camZ:    3.8,
-      camY:    0.1,
-      pivotX: -1.05,
-      pivotY:  0.65,
-      spotPos: { x:  6,    y:  1,   z:  3   },
-      spotTgt: { x:  0.5,  y:  0.1, z:  0   },
-      spotInt: 14,
-      ambInt:  0.25,
-      bonePos: new THREE.Vector3( 0.82,  0.05,  0.10),  // right side mid
-      side:    'right',
+      id: 'temporal', label: 'Hueso Temporal', side: 'right',
+      rotY: -1.1, rotX: 0, camZ: 3.8, camY: 0.1,
+      pivotX: -1.05, pivotY: 0.65,
+      spotPos: { x: 6, y: 1, z: 3 }, spotTgt: { x: 0.5, y: 0.1, z: 0 },
+      spotInt: 14, ambInt: 0.22,
+      bonePos: new THREE.Vector3(),
     },
     {
-      id: 'orbital',
-      label: 'Cavidad Orbital',
-      rotY:    0.2,
-      rotX:   -0.05,
-      camZ:    3.5,
-      camY:    0.25,
-      pivotX:  1.05,
-      pivotY:  0.7,
-      spotPos: { x:  1.5,  y:  2.5, z:  6   },
-      spotTgt: { x:  0.3,  y:  0.4, z:  0   },
-      spotInt: 14,
-      ambInt:  0.25,
-      bonePos: new THREE.Vector3( 0.38,  0.28,  0.60),  // right eye socket
-      side:    'left',
+      id: 'orbital', label: 'Cavidad Orbital', side: 'left',
+      rotY: 0.2, rotX: -0.05, camZ: 3.5, camY: 0.25,
+      pivotX: 1.05, pivotY: 0.7,
+      spotPos: { x: 1.5, y: 2.5, z: 6 }, spotTgt: { x: 0.3, y: 0.4, z: 0 },
+      spotInt: 14, ambInt: 0.22,
+      bonePos: new THREE.Vector3(),
     },
     {
-      id: 'cigomatico',
-      label: 'Arco Cigomático',
-      rotY:   -0.75,
-      rotX:    0.05,
-      camZ:    3.9,
-      camY:   -0.1,
-      pivotX: -1.05,
-      pivotY:  0.65,
-      spotPos: { x:  5,    y: -0.5, z:  4   },
-      spotTgt: { x:  0.5,  y: -0.1, z:  0   },
-      spotInt: 14,
-      ambInt:  0.25,
-      bonePos: new THREE.Vector3( 0.70, -0.18,  0.42),  // right cheekbone
-      side:    'right',
+      id: 'cigomatico', label: 'Arco Cigomático', side: 'right',
+      rotY: -0.75, rotX: 0.05, camZ: 3.9, camY: -0.1,
+      pivotX: -1.05, pivotY: 0.65,
+      spotPos: { x: 5, y: -0.5, z: 4 }, spotTgt: { x: 0.5, y: -0.1, z: 0 },
+      spotInt: 14, ambInt: 0.22,
+      bonePos: new THREE.Vector3(),
     },
   ];
 
-  /* ── DOM refs ─────────────────────────────────────────── */
-  var loadingEl      = document.getElementById('loading-screen');
-  var progressEl     = document.getElementById('progress-bar');
-  var scrollHint     = document.getElementById('scroll-hint');
-  var tooltip        = document.getElementById('tooltip');
-  var tooltipText    = document.getElementById('tooltip-text');
-  var cursorDot      = document.getElementById('cursor-dot');
-  var cursorRing     = document.getElementById('cursor-ring');
-  var sections       = document.querySelectorAll('.bone-section');
-  /* SVG connector */
-  var svgConn        = document.getElementById('svg-connectors');
-  var connLine       = document.getElementById('conn-line');
-  var connLineGlow   = document.getElementById('conn-line-glow');
-  var connDot        = document.getElementById('conn-dot');
-  var connDotGlow    = document.getElementById('conn-dot-glow');
-  var connDotPanel   = document.getElementById('conn-dot-panel');
+  /* ── DOM refs ───────────────────────────────────────────── */
+  var loadingEl   = document.getElementById('loading-screen');
+  var progressEl  = document.getElementById('progress-bar');
+  var scrollHint  = document.getElementById('scroll-hint');
+  var introBgText = document.getElementById('intro-bg-text');
+  var header      = document.getElementById('header');
+  var sectionFade = document.getElementById('section-fade');
+  var tooltip     = document.getElementById('tooltip');
+  var tooltipText = document.getElementById('tooltip-text');
+  var cursorDot   = document.getElementById('cursor-dot');
+  var cursorRing  = document.getElementById('cursor-ring');
+  var sections    = document.querySelectorAll('.bone-section');
+  /* SVG */
+  var svgConn      = document.getElementById('svg-connectors');
+  var connGlow     = document.getElementById('conn-glow');
+  var connPath     = document.getElementById('conn-path');
+  var connBoneGlow = document.getElementById('conn-bone-glow');
+  var connBoneDot  = document.getElementById('conn-bone-dot');
 
-  /* ── Three.js refs ────────────────────────────────────── */
+  /* ── Three.js state ─────────────────────────────────────── */
   var scene, camera, renderer, clock;
-  var skullGroup;        // pivot (shifts left/right or up/down)
-  var skullMesh = null;  // actual loaded object (child of skullGroup)
+  var skullGroup, skullMesh;
   var spotLight, ambientLight;
   var raycaster, mouse2D;
 
-  /* ── Animation targets (lerped each frame) ────────────── */
-  var tCamZ     = 5.5;
-  var tCamY     = 0;
-  var tRotY     = 0;
-  var tRotX     = 0;
-  var tPivotX   = 0;
-  var tPivotY   = 0;
-  var tSpotPos  = new THREE.Vector3( 2, 5, 4);
-  var tSpotTgt  = new THREE.Vector3( 0, 0, 0);
-  var tSpotInt  = 2.5;
-  var tAmbInt   = 0.9;
+  /* ── Animation targets ──────────────────────────────────── */
+  var tCamZ = 5.5, tCamY = 0;
+  var tRotY = 0,   tRotX = 0;
+  var tPivotX = 0, tPivotY = 0;
+  var tSpotPos = new THREE.Vector3(2, 5, 4);
+  var tSpotTgt = new THREE.Vector3(0, 0, 0);
+  var tSpotInt = 2.5, tAmbInt = 0.9;
 
-  /* ── Current (lerped) values ──────────────────────────── */
-  var cRotY   = 0;
-  var cRotX   = 0;
-  var cPivotX = 0;
-  var cPivotY = 0;
-  var cCamZ   = 5.5;
-  var cCamY   = 0;
+  /* ── Current (lerped) ───────────────────────────────────── */
+  var cRotY = 0, cRotX = 0;
+  var cPivotX = 0, cPivotY = 0;
+  var cCamZ = 5.5, cCamY = 0;
 
-  /* ── Mouse / cursor ───────────────────────────────────── */
+  /* ── Input ──────────────────────────────────────────────── */
   var mouseX = 0, mouseY = 0;
   var mouseNX = 0, mouseNY = 0;
   var ringX = 0, ringY = 0;
 
-  /* ── State ────────────────────────────────────────────── */
-  var activeIndex  = 0;
-  var isMobile     = window.innerWidth <= 768;
-  var hovered      = false;
-  var scrolled     = false;
+  /* ── State ──────────────────────────────────────────────── */
+  var activeIndex = 0;
+  var isMobile    = window.innerWidth <= 768;
+  var hovered     = false;
+  var scrolled    = false;
 
-  /* ── Init ─────────────────────────────────────────────── */
+  /* ── Temp vector ────────────────────────────────────────── */
+  var _v3 = new THREE.Vector3();
+
+  /* ─────────────────────────────────────────────────────────
+     INIT
+  ───────────────────────────────────────────────────────── */
   function init() {
     var container = document.getElementById('canvas-container');
     clock = new THREE.Clock();
 
-    /* Scene */
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x060607);
-    scene.fog = new THREE.FogExp2(0x060607, 0.035);
+    scene.fog = new THREE.FogExp2(0x060607, 0.032);
 
-    /* Camera */
     camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(0, 0, 5.5);
 
-    /* Renderer */
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -217,11 +146,9 @@
     renderer.shadowMap.type     = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    /* Skull pivot group */
     skullGroup = new THREE.Group();
     scene.add(skullGroup);
 
-    /* Raycaster */
     raycaster = new THREE.Raycaster();
     mouse2D   = new THREE.Vector2();
 
@@ -232,32 +159,32 @@
     animate();
   }
 
-  /* ── Lights ───────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────
+     LIGHTS
+  ───────────────────────────────────────────────────────── */
   function buildLights() {
-    /* Very dim ambient — spotlight creates all contrast */
     ambientLight = new THREE.AmbientLight(0x1a1208, 0.9);
     scene.add(ambientLight);
 
-    /* Cold fill from left */
-    var fill = new THREE.DirectionalLight(0x6080a0, 0.4);
+    var fill = new THREE.DirectionalLight(0x607080, 0.35);
     fill.position.set(-5, 1, 2);
     scene.add(fill);
 
-    /* Main theatrical spotlight */
     spotLight = new THREE.SpotLight(0xfff3d0, 2.5);
     spotLight.position.set(2, 5, 4);
-    spotLight.angle     = Math.PI / 9;   // 20°
-    spotLight.penumbra  = 0.35;
-    spotLight.decay     = 1.8;
-    spotLight.distance  = 20;
+    spotLight.angle    = Math.PI / 9;
+    spotLight.penumbra = 0.35;
+    spotLight.decay    = 1.8;
+    spotLight.distance = 22;
     spotLight.castShadow = true;
     spotLight.shadow.mapSize.set(1024, 1024);
     scene.add(spotLight);
     scene.add(spotLight.target);
-    spotLight.target.position.set(0, 0, 0);
   }
 
-  /* ── Load model ───────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────
+     MODEL
+  ───────────────────────────────────────────────────────── */
   function loadModel() {
     var draco = new THREE.DRACOLoader();
     draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/libs/draco/');
@@ -270,7 +197,6 @@
       function (gltf) {
         skullMesh = gltf.scene;
 
-        /* Auto-center + scale */
         var box    = new THREE.Box3().setFromObject(skullMesh);
         var center = box.getCenter(new THREE.Vector3());
         var size   = box.getSize(new THREE.Vector3());
@@ -287,6 +213,10 @@
         });
 
         skullGroup.add(skullMesh);
+
+        /* Compute bone positions from bbox in local GLB space */
+        computeBonePositions(box, center.divideScalar(scale), size);
+
         hideLoading();
       },
       function (xhr) {
@@ -296,18 +226,65 @@
       },
       function (err) {
         console.warn('GLB no encontrado — placeholder.', err);
-        buildPlaceholder();
+        var geo = new THREE.SphereGeometry(1, 48, 48);
+        var mat = new THREE.MeshStandardMaterial({ color: 0xc4b49a, roughness: 0.6 });
+        skullMesh = new THREE.Mesh(geo, mat);
+        skullMesh.castShadow = true;
+        skullGroup.add(skullMesh);
+        /* Fallback bone positions for sphere */
+        BONES[1].bonePos.set( 0,    0.8,   0.85);
+        BONES[2].bonePos.set(-0.6,  0.7,   0.2 );
+        BONES[3].bonePos.set( 0,    0.2,  -0.95);
+        BONES[4].bonePos.set( 0.85, 0.05,  0.2 );
+        BONES[5].bonePos.set( 0.5,  0.4,   0.75);
+        BONES[6].bonePos.set( 0.75,-0.1,   0.55);
         hideLoading();
       }
     );
   }
 
-  function buildPlaceholder() {
-    var geo = new THREE.SphereGeometry(1, 48, 48);
-    var mat = new THREE.MeshStandardMaterial({ color: 0xc4b49a, roughness: 0.6, metalness: 0.05 });
-    skullMesh = new THREE.Mesh(geo, mat);
-    skullMesh.castShadow = true;
-    skullGroup.add(skullMesh);
+  /* ── Compute bone positions relative to GLB local space ── */
+  function computeBonePositions(worldBox, origCenter, worldSize) {
+    /* Get the bounding box of the skull's child meshes in
+       skullMesh's OWN local space (the GLB coordinate system).
+       We use the original world bbox before centering,
+       then un-apply the scale to get local-space extents. */
+    var localBox = new THREE.Box3();
+    skullMesh.traverse(function (child) {
+      if (!child.isMesh || !child.geometry || !child.geometry.attributes.position) return;
+      var posAttr = child.geometry.attributes.position;
+      var tmp = new THREE.Vector3();
+      for (var i = 0; i < posAttr.count; i++) {
+        tmp.fromBufferAttribute(posAttr, i);
+        child.localToWorld(tmp); /* world space */
+        localBox.expandByPoint(tmp);
+      }
+    });
+
+    /* Convert world bbox to skullMesh local space using inverse matrixWorld.
+       At this point skullMesh is already in skullGroup (position set),
+       so matrixWorld includes our centering. */
+    var invMat = new THREE.Matrix4().copy(skullMesh.matrixWorld).invert();
+    var lMin = localBox.min.clone().applyMatrix4(invMat);
+    var lMax = localBox.max.clone().applyMatrix4(invMat);
+
+    var lb = new THREE.Box3(
+      new THREE.Vector3(Math.min(lMin.x, lMax.x), Math.min(lMin.y, lMax.y), Math.min(lMin.z, lMax.z)),
+      new THREE.Vector3(Math.max(lMin.x, lMax.x), Math.max(lMin.y, lMax.y), Math.max(lMin.z, lMax.z))
+    );
+    var c = lb.getCenter(new THREE.Vector3());
+    var s = lb.getSize(new THREE.Vector3());
+
+    /* Bone positions as fractions of the local bounding box.
+       Assumes Y-up, Z toward camera (standard GLTF / Three.js). */
+    BONES[1].bonePos.set(c.x + s.x * 0.02,  c.y + s.y * 0.30,  c.z + s.z * 0.38); // frontal
+    BONES[2].bonePos.set(c.x - s.x * 0.22,  c.y + s.y * 0.38,  c.z + s.z * 0.04); // parietal
+    BONES[3].bonePos.set(c.x + s.x * 0.00,  c.y + s.y * 0.06,  c.z - s.z * 0.40); // occipital
+    BONES[4].bonePos.set(c.x + s.x * 0.42,  c.y + s.y * 0.02,  c.z + s.z * 0.08); // temporal
+    BONES[5].bonePos.set(c.x + s.x * 0.20,  c.y + s.y * 0.14,  c.z + s.z * 0.44); // orbital
+    BONES[6].bonePos.set(c.x + s.x * 0.38,  c.y - s.y * 0.06,  c.z + s.z * 0.26); // cigomatico
+
+    console.log('[Skull] Bone positions computed:', c, s);
   }
 
   function hideLoading() {
@@ -315,26 +292,28 @@
     setTimeout(function () { loadingEl.classList.add('hidden'); }, 700);
   }
 
-  /* ── Activate bone by scroll index ───────────────────── */
+  /* ─────────────────────────────────────────────────────────
+     SCROLL / SECTION ACTIVATION
+  ───────────────────────────────────────────────────────── */
   function activateBone(index) {
     if (index === activeIndex) return;
+    var prev = activeIndex;
     activeIndex = index;
+
+    /* Flash fade between sections */
+    if (prev !== index) {
+      sectionFade.classList.add('flash');
+      setTimeout(function () { sectionFade.classList.remove('flash'); }, 220);
+    }
 
     var bone = BONES[index];
 
-    /* Camera targets */
-    tCamZ  = bone.camZ;
-    tCamY  = bone.camY;
-
-    /* Skull rotation targets */
-    tRotY  = bone.rotY;
-    tRotX  = bone.rotX;
-
-    /* Skull pivot offset */
+    tCamZ   = bone.camZ;
+    tCamY   = bone.camY;
+    tRotY   = bone.rotY;
+    tRotX   = bone.rotX;
     tPivotX = bone.pivotX;
     tPivotY = bone.pivotY;
-
-    /* Spotlight */
     tSpotPos.set(bone.spotPos.x, bone.spotPos.y, bone.spotPos.z);
     tSpotTgt.set(bone.spotTgt.x, bone.spotTgt.y, bone.spotTgt.z);
     tSpotInt = bone.spotInt;
@@ -344,9 +323,22 @@
     sections.forEach(function (s, i) {
       s.classList.toggle('active', i === index);
     });
+
+    /* Intro text ↔ small header dissolve */
+    if (index === 0) {
+      introBgText.classList.remove('hidden');
+      header.classList.remove('visible');
+      scrollHint.classList.remove('hidden');
+    } else {
+      introBgText.classList.add('hidden');
+      header.classList.add('visible');
+      scrollHint.classList.add('hidden');
+    }
+
+    /* SVG connector */
+    svgConn.classList.toggle('visible', index > 0);
   }
 
-  /* ── Scroll setup ─────────────────────────────────────── */
   function setupScroll() {
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
@@ -357,39 +349,29 @@
     }, { threshold: 0.45 });
 
     sections.forEach(function (s) { observer.observe(s); });
-
-    /* Intro active on load */
     sections[0].classList.add('active');
   }
 
-  /* ── Events ───────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────
+     EVENTS
+  ───────────────────────────────────────────────────────── */
   function setupEvents() {
-
-    /* Mouse move — cursor + parallax + raycasting */
     document.addEventListener('mousemove', function (e) {
       mouseX  = e.clientX;
       mouseY  = e.clientY;
       mouseNX = (e.clientX / window.innerWidth)  * 2 - 1;
       mouseNY = (e.clientY / window.innerHeight) * 2 - 1;
-
       cursorDot.style.left = mouseX + 'px';
       cursorDot.style.top  = mouseY + 'px';
       tooltip.style.left   = mouseX + 'px';
       tooltip.style.top    = mouseY + 'px';
-
-      /* Raycasting for hover */
       mouse2D.set(mouseNX, -mouseNY);
     });
 
-    /* Scroll — hide scroll hint once */
     window.addEventListener('scroll', function () {
-      if (!scrolled) {
-        scrolled = true;
-        scrollHint.classList.add('hidden');
-      }
+      if (!scrolled) { scrolled = true; }
     }, { passive: true });
 
-    /* Resize */
     window.addEventListener('resize', function () {
       isMobile = window.innerWidth <= 768;
       if (!camera || !renderer) return;
@@ -399,71 +381,142 @@
     });
   }
 
-  /* ── Lerp helper ──────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────
+     SVG CONNECTOR
+  ───────────────────────────────────────────────────────── */
+  function buildCurvedPath(px, py, bx, by, side) {
+    var dx  = bx - px;
+    var dy  = by - py;
+    var adx = Math.abs(dx);
+    var arm = Math.min(adx * 0.55, 140); /* control arm length */
+
+    var cp1x, cp1y, cp2x, cp2y;
+    if (side === 'left') {
+      /* Panel on left, bone on right: extend right from panel, arc toward bone */
+      cp1x = px + arm;   cp1y = py;
+      cp2x = bx - arm * 0.3; cp2y = by;
+    } else if (side === 'right') {
+      /* Panel on right, bone on left */
+      cp1x = px - arm;   cp1y = py;
+      cp2x = bx + arm * 0.3; cp2y = by;
+    } else {
+      /* Mobile: vertical */
+      var ady = Math.abs(dy);
+      var varm = Math.min(ady * 0.55, 100);
+      cp1x = px; cp1y = py - varm;
+      cp2x = bx; cp2y = by + varm * 0.3;
+    }
+    return 'M ' + px.toFixed(1) + ',' + py.toFixed(1) +
+           ' C ' + cp1x.toFixed(1) + ',' + cp1y.toFixed(1) +
+           ' '  + cp2x.toFixed(1) + ',' + cp2y.toFixed(1) +
+           ' '  + bx.toFixed(1)   + ',' + by.toFixed(1);
+  }
+
+  function updateConnector() {
+    if (activeIndex === 0 || !skullMesh) {
+      svgConn.classList.remove('visible');
+      return;
+    }
+
+    var bone = BONES[activeIndex];
+
+    /* Project bone local position → world → screen.
+       applyMatrix4(matrixWorld) already includes skullGroup transform. */
+    _v3.copy(bone.bonePos).applyMatrix4(skullMesh.matrixWorld);
+    var ndc = _v3.clone().project(camera);
+    if (ndc.z >= 1) { svgConn.classList.remove('visible'); return; }
+
+    var W = window.innerWidth;
+    var H = window.innerHeight;
+    var bx = ( ndc.x + 1) * 0.5 * W;
+    var by = (-ndc.y + 1) * 0.5 * H;
+
+    /* Panel connector-origin dot position */
+    var originEl = sections[activeIndex] && sections[activeIndex].querySelector('.ann-connector-origin');
+    if (!originEl) { svgConn.classList.remove('visible'); return; }
+
+    var rect = originEl.getBoundingClientRect();
+    var px   = rect.left + rect.width  * 0.5;
+    var py   = rect.top  + rect.height * 0.5;
+
+    /* Build curved path */
+    var pathSide = isMobile ? null : bone.side;
+    var d = buildCurvedPath(px, py, bx, by, pathSide);
+
+    connPath.setAttribute('d', d);
+    connGlow.setAttribute('d', d);
+    connBoneDot.setAttribute('cx', bx.toFixed(1));
+    connBoneDot.setAttribute('cy', by.toFixed(1));
+    connBoneGlow.setAttribute('cx', bx.toFixed(1));
+    connBoneGlow.setAttribute('cy', by.toFixed(1));
+
+    svgConn.classList.add('visible');
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     LERP HELPER
+  ───────────────────────────────────────────────────────── */
   function lerp(a, b, t) { return a + (b - a) * t; }
 
-  /* ── Render loop ──────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────
+     RENDER LOOP
+  ───────────────────────────────────────────────────────── */
   function animate() {
     requestAnimationFrame(animate);
     var t = clock.getElapsedTime();
 
-    /* ── Skull rotation lerp */
+    /* Skull rotation */
     cRotY = lerp(cRotY, tRotY, 0.028);
     cRotX = lerp(cRotX, tRotX, 0.028);
 
-    /* ── Skull pivot lerp (desktop X, mobile Y) */
-    var targetX = isMobile ? 0       : tPivotX;
-    var targetY = isMobile ? tPivotY : 0;
-    cPivotX = lerp(cPivotX, targetX, 0.035);
-    cPivotY = lerp(cPivotY, targetY, 0.035);
+    /* Skull pivot */
+    var tx = isMobile ? 0       : tPivotX;
+    var ty = isMobile ? tPivotY : 0;
+    cPivotX = lerp(cPivotX, tx, 0.035);
+    cPivotY = lerp(cPivotY, ty, 0.035);
     skullGroup.position.x = cPivotX;
     skullGroup.position.y = cPivotY;
 
-    /* ── Apply skull rotation + subtle mouse parallax */
+    /* Skull mesh rotation + gentle float */
     if (skullMesh) {
-      skullMesh.rotation.y = cRotY + mouseNX * 0.04;
-      skullMesh.rotation.x = cRotX + mouseNY * 0.02;
-
-      /* Gentle float */
+      skullMesh.rotation.y = cRotY + mouseNX * 0.035;
+      skullMesh.rotation.x = cRotX + mouseNY * 0.018;
       skullMesh.position.y = Math.sin(t * 0.55) * 0.04;
     }
 
-    /* ── Camera lerp */
+    /* Camera */
     cCamZ = lerp(cCamZ, tCamZ, 0.032);
     cCamY = lerp(cCamY, tCamY, 0.032);
     camera.position.z = cCamZ;
     camera.position.y = cCamY;
-    camera.lookAt(cPivotX * 0.5, cPivotY * 0.3 + cCamY * 0.3, 0);
+    camera.lookAt(cPivotX * 0.45, cPivotY * 0.25 + cCamY * 0.25, 0);
 
-    /* ── Spotlight lerp */
+    /* Spotlight */
     spotLight.position.lerp(tSpotPos, 0.035);
     spotLight.target.position.lerp(tSpotTgt, 0.035);
     spotLight.target.updateMatrixWorld();
-    spotLight.intensity  = lerp(spotLight.intensity,  tSpotInt,  0.04);
-    ambientLight.intensity = lerp(ambientLight.intensity, tAmbInt, 0.04);
+    spotLight.intensity    = lerp(spotLight.intensity,    tSpotInt, 0.04);
+    ambientLight.intensity = lerp(ambientLight.intensity, tAmbInt,  0.04);
 
-    /* ── Raycasting hover */
-    if (skullMesh && renderer) {
+    /* Hover raycasting */
+    if (skullMesh) {
       raycaster.setFromCamera(mouse2D, camera);
       var hits = raycaster.intersectObject(skullGroup, true);
       if (hits.length > 0) {
         if (!hovered) {
           hovered = true;
           document.body.classList.add('hovering');
-          var bone = BONES[activeIndex];
-          tooltipText.textContent = bone.label || 'Explorá el cráneo';
+          tooltipText.textContent = BONES[activeIndex].label || 'Explorá el cráneo';
           tooltip.classList.add('visible');
         }
-      } else {
-        if (hovered) {
-          hovered = false;
-          document.body.classList.remove('hovering');
-          tooltip.classList.remove('visible');
-        }
+      } else if (hovered) {
+        hovered = false;
+        document.body.classList.remove('hovering');
+        tooltip.classList.remove('visible');
       }
     }
 
-    /* ── Cursor ring lag */
+    /* Cursor ring */
     ringX = lerp(ringX, mouseX, 0.1);
     ringY = lerp(ringY, mouseY, 0.1);
     cursorRing.style.left = ringX + 'px';
@@ -471,75 +524,8 @@
 
     renderer.render(scene, camera);
 
-    /* SVG connector — updated after render so matrices are current */
+    /* SVG connector — after render so matrices are current */
     updateConnector();
-  }
-
-  /* ── Connector (SVG line bone ↔ panel) ───────────────── */
-  var _worldPos = new THREE.Vector3();
-
-  function updateConnector() {
-    var bone = BONES[activeIndex];
-
-    /* Hide during intro or if skull not loaded */
-    if (activeIndex === 0 || !skullMesh) {
-      svgConn.classList.remove('visible');
-      return;
-    }
-
-    /* Project bone local position → world → NDC → screen */
-    _worldPos.copy(bone.bonePos).applyMatrix4(skullMesh.matrixWorld);
-    _worldPos.add(skullGroup.position); // account for pivot shift
-
-    var ndc = _worldPos.clone().project(camera);
-
-    /* Skip if behind camera */
-    if (ndc.z >= 1) {
-      svgConn.classList.remove('visible');
-      return;
-    }
-
-    var W = window.innerWidth;
-    var H = window.innerHeight;
-    var bx = (ndc.x  + 1) / 2 * W;
-    var by = (-ndc.y + 1) / 2 * H;
-
-    /* Panel connection point */
-    var panel = sections[activeIndex] && sections[activeIndex].querySelector('.ann-panel');
-    if (!panel) { svgConn.classList.remove('visible'); return; }
-
-    var rect = panel.getBoundingClientRect();
-    var px, py;
-
-    if (isMobile) {
-      px = rect.left + rect.width * 0.5;
-      py = rect.top + 8;
-    } else if (bone.side === 'left') {
-      px = rect.right - 4;
-      py = rect.top + rect.height * 0.28; /* align near title */
-    } else {
-      px = rect.left + 4;
-      py = rect.top + rect.height * 0.28;
-    }
-
-    /* Update all SVG elements */
-    function setLine(el) {
-      el.setAttribute('x1', px);
-      el.setAttribute('y1', py);
-      el.setAttribute('x2', bx);
-      el.setAttribute('y2', by);
-    }
-    setLine(connLine);
-    setLine(connLineGlow);
-
-    connDot.setAttribute('cx', bx);
-    connDot.setAttribute('cy', by);
-    connDotGlow.setAttribute('cx', bx);
-    connDotGlow.setAttribute('cy', by);
-    connDotPanel.setAttribute('cx', px);
-    connDotPanel.setAttribute('cy', py);
-
-    svgConn.classList.add('visible');
   }
 
   /* ── Boot ─────────────────────────────────────────────── */
