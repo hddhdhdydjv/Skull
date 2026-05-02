@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -24,7 +24,7 @@
   <!-- Loading -->
   <div id="loading-screen">
     <div class="loading-mark">×</div>
-    <div class="loading-label">Cargando anatomía</div>
+    <div class="loading-label">Loading anatomy</div>
     <div class="progress-bar-wrap">
       <div class="progress-bar" id="progress-bar"></div>
     </div>
@@ -33,7 +33,7 @@
   <!-- Fixed 3D canvas -->
   <div id="canvas-container"></div>
 
-  <!-- SVG connector (sits between canvas and text) -->
+  <!-- SVG connector -->
   <svg id="svg-connectors" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="dot-glow" x="-100%" y="-100%" width="300%" height="300%">
@@ -41,12 +41,9 @@
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    <!-- Glow copy -->
     <path id="conn-glow" fill="none" stroke="rgba(255,106,0,0.12)" stroke-width="6" stroke-linecap="round"/>
-    <!-- Main dashed path -->
     <path id="conn-path" fill="none" stroke="rgba(255,106,0,0.5)" stroke-width="0.8"
           stroke-linecap="round" stroke-dasharray="2 6"/>
-    <!-- Dot at bone -->
     <circle id="conn-bone-glow" r="8"  fill="rgba(255,106,0,0.15)" filter="url(#dot-glow)"/>
     <circle id="conn-bone-dot"  r="3"  fill="#ff6a00"/>
   </svg>
@@ -55,7 +52,7 @@
   <div id="vignette"></div>
   <div id="section-fade"></div>
 
-  <!-- Large background intro text — letras con space-between para llenar todo el ancho -->
+  <!-- Large background intro text -->
   <div id="intro-bg-text">
     <div class="ibt-line">
       <span>A</span><span>N</span><span>A</span><span>T</span><span>O</span><span>M</span><span>Y</span>
@@ -65,7 +62,7 @@
     </div>
   </div>
 
-  <!-- Small fixed header (appears after intro) -->
+  <!-- Small fixed header -->
   <div id="header">
     <span class="h-top">ANATOMY</span>
     <span class="h-bot">UNVEILED</span>
@@ -88,9 +85,9 @@
       <div class="ann-panel side-left">
         <div class="ann-connector-origin"></div>
         <span class="ann-number">01</span>
-        <h2 class="ann-title">HUESO<br>FRONTAL</h2>
+        <h2 class="ann-title">FRONTAL<br>BONE</h2>
         <p class="ann-latin">Os frontale</p>
-        <p class="ann-desc">Forma la frente y el techo de las cavidades orbitarias. Es uno de los huesos más prominentes del neurocráneo, protegiendo los lóbulos frontales del cerebro.</p>
+        <p class="ann-desc">The frontal bone forms the entire forehead, the roof of the orbital cavities, and the anterior portion of the cranial floor. It contains the frontal sinuses — paired air-filled chambers that lighten the skull and contribute to voice resonance. Its smooth external surface transitions into the supraorbital ridges, while the internal table is grooved by the anterior meningeal arteries and the superior sagittal sinus. The coronal suture marks its posterior boundary, articulating with the two parietal bones.</p>
       </div>
     </section>
 
@@ -99,9 +96,9 @@
       <div class="ann-panel side-right">
         <div class="ann-connector-origin"></div>
         <span class="ann-number">02</span>
-        <h2 class="ann-title">HUESO<br>PARIETAL</h2>
+        <h2 class="ann-title">PARIETAL<br>BONE</h2>
         <p class="ann-latin">Os parietale</p>
-        <p class="ann-desc">Par de huesos planos que forman los lados y la bóveda superior del cráneo. Se articulan en la sutura sagital y en la sutura coronal.</p>
+        <p class="ann-desc">The two parietal bones form the superior and lateral walls of the cranial vault, meeting at the midline sagittal suture and articulating with the frontal bone at the coronal suture. Each bone is a curved quadrilateral plate marked externally by the superior and inferior temporal lines — attachment points for the temporalis muscle. The internal concave surface is impressed by meningeal vessels and bears the granular fossae where arachnoid granulations filter cerebrospinal fluid back into venous circulation.</p>
       </div>
     </section>
 
@@ -110,9 +107,9 @@
       <div class="ann-panel side-left">
         <div class="ann-connector-origin"></div>
         <span class="ann-number">03</span>
-        <h2 class="ann-title">HUESO<br>OCCIPITAL</h2>
+        <h2 class="ann-title">OCCIPITAL<br>BONE</h2>
         <p class="ann-latin">Os occipitale</p>
-        <p class="ann-desc">Forma la base posterior del cráneo. Contiene el foramen magnum, la apertura por donde la médula espinal conecta con el tronco encefálico.</p>
+        <p class="ann-desc">The occipital bone constitutes the posterior and inferior cranial base, housing the foramen magnum — the large oval aperture through which the brainstem becomes the spinal cord. The occipital condyles flank the foramen magnum and articulate with the atlas (C1), forming the atlanto-occipital joint that allows nodding. The external occipital protuberance anchors the nuchal ligament, while the basilar part fuses with the sphenoid body to form the clivus, a ramp supporting the pons and medulla oblongata.</p>
       </div>
     </section>
 
@@ -121,9 +118,9 @@
       <div class="ann-panel side-right">
         <div class="ann-connector-origin"></div>
         <span class="ann-number">04</span>
-        <h2 class="ann-title">HUESO<br>TEMPORAL</h2>
+        <h2 class="ann-title">TEMPORAL<br>BONE</h2>
         <p class="ann-latin">Os temporale</p>
-        <p class="ann-desc">Aloja el oído interno y la articulación temporomandibular. Contiene el proceso mastoideo y el meato auditivo externo.</p>
+        <p class="ann-desc">Among the densest bones in the body, the temporal bone encases the entire auditory and vestibular apparatus — the cochlea, semicircular canals, and ossicular chain. Its petrous part houses the internal acoustic meatus, through which the facial and vestibulocochlear nerves pass. The mastoid process provides attachment for the sternocleidomastoid and digastric muscles, while the styloid process anchors four muscles and the stylohyoid ligament. The temporomandibular joint, formed by the mandibular fossa, is the only synovial joint of the skull.</p>
       </div>
     </section>
 
@@ -132,20 +129,20 @@
       <div class="ann-panel side-left">
         <div class="ann-connector-origin"></div>
         <span class="ann-number">05</span>
-        <h2 class="ann-title">CAVIDAD<br>ORBITAL</h2>
+        <h2 class="ann-title">ORBITAL<br>CAVITY</h2>
         <p class="ann-latin">Orbita oculi</p>
-        <p class="ann-desc">Cuenca ósea cónica formada por siete huesos. Aloja y protege el globo ocular, los músculos extraoculares y el nervio óptico.</p>
+        <p class="ann-desc">The orbital cavity is a cone-shaped bony socket assembled from seven distinct bones: frontal, zygomatic, maxilla, lacrimal, ethmoid, sphenoid, and palatine. It protects the globe, six extraocular muscles, the lacrimal gland, and the optic nerve within a volume of roughly 30 mL. The optic canal at the apex transmits the optic nerve and ophthalmic artery. The superior orbital fissure conducts cranial nerves III, IV, V₁, and VI. The orbital walls are thin enough that fractures from blunt trauma classically produce the "blowout" pattern into the maxillary sinus.</p>
       </div>
     </section>
 
-    <!-- 6 · Cigomático — panel RIGHT -->
+    <!-- 6 · Zygomatic — panel RIGHT -->
     <section class="bone-section" data-index="6">
       <div class="ann-panel side-right">
         <div class="ann-connector-origin"></div>
         <span class="ann-number">06</span>
-        <h2 class="ann-title">ARCO<br>CIGOMÁTICO</h2>
+        <h2 class="ann-title">ZYGOMATIC<br>ARCH</h2>
         <p class="ann-latin">Arcus zygomaticus</p>
-        <p class="ann-desc">Puente óseo lateral que conecta el hueso cigomático con el proceso cigomático del temporal. Punto de anclaje del músculo masetero.</p>
+        <p class="ann-desc">The zygomatic arch is a slender bony bridge formed by the temporal process of the zygomatic bone and the zygomatic process of the temporal bone, joined at the zygomaticotemporal suture. It defines the lateral contour of the midface and serves as the primary origin and passage for the masseter muscle — the most powerful jaw-closing muscle by cross-sectional area. The arch also provides the inferior boundary of the temporal fossa, through which the temporalis muscle descends to the coronoid process of the mandible.</p>
       </div>
     </section>
 
